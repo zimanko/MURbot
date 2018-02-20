@@ -38,7 +38,7 @@ try:
         MF.tilt(40, power, 3)
         MF.turn('Straight')
         MF.move(0)
-        time.sleep(0.5)
+        time.sleep(1)
 except KeyboardInterrupt:
     MF.move(0)
     BP.reset_all()
