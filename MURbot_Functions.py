@@ -9,7 +9,7 @@ BN = BNO055.BNO055()
 # MURbot Functions:
 def setup():
     # Set motor positioning in a high state
-    print('Set motor positioning in a high state')
+    print('Set motor positioning in a high state...', end="")
     BP.set_motor_position_kp(BP.PORT_A, 120)
     BP.set_motor_position_kd(BP.PORT_A, 100)
     BP.set_motor_position_kp(BP.PORT_D, 120)
@@ -17,16 +17,25 @@ def setup():
     print('Done')
 
     # Setup Ultrasonic sensors
-    print('Setup Ultrasonic sensors')
+    print('Setup Ultrasonic sensors...', end="")
     BP.set_sensor_type(BP.PORT_1, BP.SENSOR_TYPE.EV3_ULTRASONIC_CM)
     BP.set_sensor_type(BP.PORT_4, BP.SENSOR_TYPE.EV3_ULTRASONIC_CM)
     print('Done')
 
     # Calibrate IMU Sensor
-    print('Calibrate IMU Sensor')
-    while BN.get_calibration_status().count(3) != 4:
+    print('Calibrate IMU Sensor...', end="")
+    rounds = 0
+    while rounds < 100:
         BN.set_calibration(BN.get_calibration())
-    print('Done')
+        status = BN.get_calibration_status().count(3)
+        if status == 4:
+            break
+        if rounds > 10 and status == 3:
+            break
+        if rounds > 20 and status == 2:
+            break
+        rounds += 1
+    print('Done (' + status + ')')
 
     time.sleep(3)
 
@@ -49,20 +58,16 @@ def turn(direction):
 def tilt(tilt_distance, direction, duration):
     # pass the motor power to the direction and it use the sign of the power for detection direction
     # duration: how long would the function run in seconds (any negative number means infinite)
-    if direction < 0:
-        while timer != duration:
-            start = time.time()
+    while timer < duration or duration < 0:
+        start = time.time()
+        if direction < 0:
             if BP.get_sensor(BP.PORT_1) < tilt_distance:
                 break
-            end = time.time()
-            timer = round(end - start)
-    if direction > 0:
-        while timer != duration:
-            start = time.time()
+        if direction > 0:
             if BP.get_sensor(BP.PORT_4) < tilt_distance:
                 break
-            end = time.time()
-            timer = round(end - start)
+        end = time.time()
+        timer = round(end - start)
 
 def radar(dps, ch):
     BP.set_motor_dps(BP.PORT_A, dps)
