@@ -61,12 +61,15 @@ def tilt(tilt_distance, direction, duration):
     timer = 0
     while timer < duration or duration < 0:
         start = time.time()
-        if direction < 0:
-            if BP.get_sensor(BP.PORT_1) < tilt_distance:
-                break
-        if direction > 0:
-            if BP.get_sensor(BP.PORT_4) < tilt_distance:
-                break
+        try:
+            if direction < 0:
+                if BP.get_sensor(BP.PORT_1) < tilt_distance:
+                    break
+            if direction > 0:
+                if BP.get_sensor(BP.PORT_4) < tilt_distance:
+                    break
+        except:
+            continue
         end = time.time()
         timer = round(end - start)
 
