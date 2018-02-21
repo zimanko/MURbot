@@ -35,7 +35,7 @@ def setup():
         if rounds > 20 and status == 2:
             break
         rounds += 1
-    print('Done (' + status + ')')
+    print('Done (' + str(status) + ')')
 
     time.sleep(3)
 
@@ -58,6 +58,7 @@ def turn(direction):
 def tilt(tilt_distance, direction, duration):
     # pass the motor power to the direction and it use the sign of the power for detection direction
     # duration: how long would the function run in seconds (any negative number means infinite)
+    timer = 0
     while timer < duration or duration < 0:
         start = time.time()
         if direction < 0:
