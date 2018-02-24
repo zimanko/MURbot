@@ -1,4 +1,4 @@
-import BNO055 # !! change to: from di_sensors import BNO055
+from di_sensors import BNO055
 import brickpi3
 import math
 import time
@@ -142,3 +142,19 @@ def whatever():
         BP.set_motor_dps(BP.PORT_A, 0)
         t += 1
 
+def reset_all():
+    BP.reset_all()
+
+def run():
+    power = 30
+    while True:
+        MF.move(power)
+        MF.tilt(40, power, -1)
+        MF.move(0)
+        time.sleep(0.5)
+        MF.move(-power)
+        MF.turn('Left')
+        MF.tilt(40, power, 3)
+        MF.turn('Straight')
+        MF.move(0)
+        time.sleep(1)

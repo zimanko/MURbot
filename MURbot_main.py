@@ -18,28 +18,44 @@
 #  GNU General Public License for more details.
 #  
 
+import tkinter as TK
 import MURbot_Functions as MF
-import brickpi3
-import time
 
-BP = brickpi3.BrickPi3()
+title_font = ('system', 20, 'normal')
+button_font = ('system', 12, 'normal')
+button_config = {'fg' : 'grey',
+                 'bg' : 'white',
+                 'font' : button_font,
+                 'height' : 2,
+                 'width' : 12,
+                 'relief' : 'flat',
+                 'activebackground' : 'white',
+                 'activeforeground' : 'green',
+                 'bd' : 1}
 
-MF.setup()
-power = 30
 
-try:
-    while True:
-        MF.move(power)
-        MF.tilt(40, power, -1)
-        MF.move(0)
-        time.sleep(0.5)
-        MF.move(-power)
-        MF.turn('Left')
-        MF.tilt(40, power, 3)
-        MF.turn('Straight')
-        MF.move(0)
-        time.sleep(1)
-except KeyboardInterrupt:
-    MF.move(0)
-    BP.reset_all()
+root = TK.Tk()
+root.geometry('280x120')
+root.resizable(width=False, height=False)
 
+main_wnd = TK.Frame(root)
+main_wnd.pack(expand=1, fill='both')
+
+TK.Label(main_wnd,
+         text='MURbot',
+         bg='white',
+         fg='grey',
+         font=title_font).pack(expand=1, fill='both', side='left')
+
+TK.Button(main_wnd,
+          text='Start',
+          **button_config,
+          command=MF.run).pack(expand=1, fill='both', side='top', anchor='e')
+
+TK.Button(main_wnd,
+          text='Stop',
+          **button_config,
+          command=MF.reset_all).pack(expand=1, fill='both', side='top', anchor='e')
+
+root.title('MURbot')
+root.mainloop()
