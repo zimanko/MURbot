@@ -21,8 +21,8 @@
 import tkinter as TK
 import MURbot_Functions as MF
 
-title_font = ('Piboto Light', 18, 'Thin')
-button_font = ('Piboto Light', 10, 'Thin')
+title_font = ('Piboto Light', 18, 'light')
+button_font = ('Piboto Light', 10, 'light')
 button_config = {'fg' : 'grey',
                  'bg' : 'white',
                  'font' : button_font,
@@ -35,7 +35,7 @@ button_config = {'fg' : 'grey',
 
 
 root = TK.Tk()
-root.geometry('280x150')
+root.geometry('280x160')
 root.resizable(width=False, height=False)
 
 main_wnd = TK.Frame(root)
