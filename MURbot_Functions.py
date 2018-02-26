@@ -148,13 +148,13 @@ def reset_all():
 def run():
     power = 30
     while True:
-        MF.move(power)
-        MF.tilt(40, power, -1)
-        MF.move(0)
+        move(power)
+        tilt(40, power, -1)
+        move(0)
         time.sleep(0.5)
-        MF.move(-power)
-        MF.turn('Left')
-        MF.tilt(40, power, 3)
-        MF.turn('Straight')
-        MF.move(0)
+        move(-power)
+        turn('Left')
+        tilt(40, power, 3)
+        turn('Straight')
+        move(0)
         time.sleep(1)
