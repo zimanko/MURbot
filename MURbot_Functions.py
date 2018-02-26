@@ -147,14 +147,4 @@ def reset_all():
 
 def run():
     power = 30
-    while True:
-        move(power)
-        tilt(40, power, -1)
-        move(0)
-        time.sleep(0.5)
-        move(-power)
-        turn('Left')
-        tilt(40, power, 3)
-        turn('Straight')
-        move(0)
-        time.sleep(1)
+    move(power)
