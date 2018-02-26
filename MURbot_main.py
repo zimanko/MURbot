@@ -21,8 +21,8 @@
 import tkinter as TK
 import MURbot_Functions as MF
 
-title_font = ('system', 20, 'normal')
-button_font = ('system', 12, 'normal')
+title_font = ('Piboto Light', 20, 'normal')
+button_font = ('Piboto Light', 12, 'normal')
 button_config = {'fg' : 'grey',
                  'bg' : 'white',
                  'font' : button_font,
@@ -31,7 +31,7 @@ button_config = {'fg' : 'grey',
                  'relief' : 'flat',
                  'activebackground' : 'white',
                  'activeforeground' : 'green',
-                 'bd' : 1}
+                 'bd' : 0}
 
 
 root = TK.Tk()
@@ -46,6 +46,11 @@ TK.Label(main_wnd,
          bg='white',
          fg='grey',
          font=title_font).pack(expand=1, fill='both', side='left')
+
+TK.Button(main_wnd,
+          text='Setup',
+          **button_config,
+          command=MF.setup).pack(expand=1, fill='both', side='top', anchor='e')
 
 TK.Button(main_wnd,
           text='Start',
