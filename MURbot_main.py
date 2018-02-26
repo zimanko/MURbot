@@ -35,7 +35,7 @@ button_config = {'fg' : 'grey',
 
 
 root = TK.Tk()
-root.geometry('280x120')
+root.geometry('280x150')
 root.resizable(width=False, height=False)
 
 main_wnd = TK.Frame(root)
