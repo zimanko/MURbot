@@ -59,8 +59,8 @@ def tilt(tilt_distance, direction, duration):
     # pass the motor power to the direction and it use the sign of the power for detection direction
     # duration: how long would the function run in seconds (any negative number means infinite)
     timer = 0
+    start = time.time()
     while timer < duration or duration < 0:
-        start = time.time()
         try:
             if direction < 0:
                 if BP.get_sensor(BP.PORT_1) < tilt_distance:

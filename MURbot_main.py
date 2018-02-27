@@ -22,7 +22,7 @@ import tkinter as TK
 import MURbot_Functions as MF
 
 title_font = ('Piboto Light', 18, 'normal')
-button_font = ('Piboto Light', 9, 'normal')
+button_font = ('Piboto Light', 10, 'normal')
 button_config = {'fg' : 'grey',
                  'bg' : 'white',
                  'font' : button_font,
