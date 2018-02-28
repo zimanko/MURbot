@@ -26,41 +26,44 @@ button_font = ('Piboto Light', 10, 'normal')
 button_config = {'fg' : 'grey',
                  'bg' : 'white',
                  'font' : button_font,
-                 'height' : 2,
-                 'width' : 12,
+                 'height' : 1,
+                 'width' : 8,
+                 'padx' : 3,
+                 'pady' : 5,
                  'relief' : 'flat',
+                 'overrelief' : 'raised',
                  'activebackground' : 'white',
-                 'activeforeground' : 'green',
-                 'bd' : 0}
+                 'activeforeground' : 'grey',
+                 'bd' : 1}
 
 
 root = TK.Tk()
-root.geometry('280x160')
 root.resizable(width=False, height=False)
 
 main_wnd = TK.Frame(root)
+main_wnd.config(bg='white')
 main_wnd.pack(expand=1, fill='both')
 
 TK.Label(main_wnd,
          text='MURbot',
          bg='white',
          fg='grey',
-         font=title_font).pack(expand=1, fill='both', side='left')
+         font=title_font).pack(side='left', padx=20)
 
 TK.Button(main_wnd,
           text='Setup',
           **button_config,
-          command=MF.setup).pack(expand=1, fill='both', side='top', anchor='e')
+          command=MF.setup).pack(side='top', anchor='e', padx=10, pady=5)
 
 TK.Button(main_wnd,
           text='Start',
           **button_config,
-          command=MF.run).pack(expand=1, fill='both', side='top', anchor='e')
+          command=MF.run).pack(side='top', anchor='e', padx=10, pady=5)
 
 TK.Button(main_wnd,
           text='Stop',
           **button_config,
-          command=MF.reset_all).pack(expand=1, fill='both', side='top', anchor='e')
+          command=MF.reset_all).pack(side='top', anchor='e', padx=10, pady=5)
 
-root.title('MURbot')
+root.title('MURbot v0.1')
 root.mainloop()

@@ -7,6 +7,12 @@ BP = brickpi3.BrickPi3()
 BN = BNO055.BNO055()
 
 # MURbot Functions:
+def reset_all():
+    move(0)
+    BP.set_motor_position(BP.PORT_D, 0)
+    BP.reset_all()
+
+
 def setup():
     # Set motor positioning in a high state
     print('Set motor positioning in a high state...', end="")
@@ -43,16 +49,18 @@ def setup():
 def move(power):
     BP.set_motor_power(BP.PORT_B, power)
     BP.set_motor_power(BP.PORT_C, -power)
+    print('Power: ' + str(power))
     return power
 
 
 def turn(direction):
     if direction == 'Left':
-        BP.set_motor_position(BP.PORT_D, 120)
+        BP.set_motor_position(BP.PORT_D, 280)
     if direction == 'Right':
-        BP.set_motor_position(BP.PORT_D, -120)
+        BP.set_motor_position(BP.PORT_D, -280)
     if direction == 'Straight':
         BP.set_motor_position(BP.PORT_D, 0)
+    print('Direction: ' + direction)
 
 
 def tilt(tilt_distance, direction, duration):
@@ -60,18 +68,28 @@ def tilt(tilt_distance, direction, duration):
     # duration: how long would the function run in seconds (any negative number means infinite)
     timer = 0
     start = time.time()
+    print('Duration: ' + str(duration))
     while timer < duration or duration < 0:
         try:
-            if direction < 0:
-                if BP.get_sensor(BP.PORT_1) < tilt_distance:
-                    break
             if direction > 0:
-                if BP.get_sensor(BP.PORT_4) < tilt_distance:
+                S1_value = BP.get_sensor(BP.PORT_1)
+                print('S1: ' + str(S1_value), end=" ")
+                if S1_value < tilt_distance:
+                    print('TILT')
+                    break
+            if direction < 0:
+                S4_value = BP.get_sensor(BP.PORT_4)
+                print('S4: ' + str(S4_value), end=" ")
+                if S4_value < tilt_distance:
+                    print('TILT')
                     break
         except:
             continue
         end = time.time()
         timer = round(end - start)
+        print('Timer: ' + str(timer))
+        time.sleep(0.1)
+
 
 def radar(dps, ch):
     BP.set_motor_dps(BP.PORT_A, dps)
@@ -86,6 +104,7 @@ def radar(dps, ch):
     a2 = math.sin(alpha) * c2
     b2 = math.cos(alpha) * c2
     return a1, b1, a2, b2
+
 
 def whatever():
     t = 0
@@ -142,9 +161,25 @@ def whatever():
         BP.set_motor_dps(BP.PORT_A, 0)
         t += 1
 
-def reset_all():
-    BP.reset_all()
 
 def run():
     power = 30
-    move(power)
+    reverse = -1 * power
+    try:
+        while True:
+            move(power)
+            tilt(50, power, -1)
+            move(0)
+            time.sleep(0.5)
+            turn('Right')
+            time.sleep(0.5)
+            move(reverse)
+            tilt(50, reverse, 3)
+            move(0)
+            time.sleep(0.5)
+            turn('Straight')
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        raise
+    except:
+        reset_all()

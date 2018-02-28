@@ -23,6 +23,7 @@ def callback():
 root = TK.Tk()
 
 main_wnd = TK.Frame(root)
+main_wnd.config(bg='white')
 main_wnd.pack(expand=1, fill='both')
 
 TK.Label(main_wnd,
