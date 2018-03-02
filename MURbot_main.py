@@ -19,23 +19,7 @@
 #  
 
 import tkinter as TK
-import MURbot_Functions as MF
-
-title_font = ('Piboto Light', 18, 'normal')
-button_font = ('Piboto Light', 10, 'normal')
-button_config = {'fg' : 'grey',
-                 'bg' : 'white',
-                 'font' : button_font,
-                 'height' : 1,
-                 'width' : 8,
-                 'padx' : 3,
-                 'pady' : 5,
-                 'relief' : 'flat',
-                 'overrelief' : 'raised',
-                 'activebackground' : 'white',
-                 'activeforeground' : 'grey',
-                 'bd' : 1}
-
+from MURbot_GUIclasses import *
 
 root = TK.Tk()
 root.resizable(width=False, height=False)
@@ -48,22 +32,11 @@ TK.Label(main_wnd,
          text='MURbot',
          bg='white',
          fg='grey',
-         font=title_font).pack(side='left', padx=20)
+         font=('Piboto Light', 18, 'normal')).pack(side='left', padx=20)
 
-TK.Button(main_wnd,
-          text='Setup',
-          **button_config,
-          command=MF.setup).pack(side='top', anchor='e', padx=10, pady=5)
-
-TK.Button(main_wnd,
-          text='Start',
-          **button_config,
-          command=MF.run).pack(side='top', anchor='e', padx=10, pady=5)
-
-TK.Button(main_wnd,
-          text='Stop',
-          **button_config,
-          command=MF.reset_all).pack(side='top', anchor='e', padx=10, pady=5)
+MainWndButtons(main_wnd, text='Setup', command=MainWndButtons.Setup)
+MainWndButtons(main_wnd, text='Start', command=MainWndButtons.Start)
+MainWndButtons(main_wnd, text='Stop', command=MainWndButtons.Stop)
 
 root.title('MURbot v0.1')
 root.mainloop()
