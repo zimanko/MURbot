@@ -55,9 +55,9 @@ def move(power):
 
 def turn(direction):
     if direction == 'Left':
-        BP.set_motor_position(BP.PORT_D, 280)
+        BP.set_motor_position(BP.PORT_D, 250)
     if direction == 'Right':
-        BP.set_motor_position(BP.PORT_D, -280)
+        BP.set_motor_position(BP.PORT_D, -250)
     if direction == 'Straight':
         BP.set_motor_position(BP.PORT_D, 0)
     print('Direction: ' + direction)
@@ -180,6 +180,4 @@ def run():
             turn('Straight')
             time.sleep(0.5)
     except KeyboardInterrupt:
-        raise
-    except:
         reset_all()
