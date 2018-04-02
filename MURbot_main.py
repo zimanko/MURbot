@@ -38,5 +38,5 @@ MainWndButtons(main_wnd, text='Setup', command=MainWndButtons.Setup)
 MainWndButtons(main_wnd, text='Start', command=MainWndButtons.Start)
 MainWndButtons(main_wnd, text='Stop', command=MainWndButtons.Stop)
 
-root.title('MURbot v0.1')
+root.title('MURbot v0.2')
 root.mainloop()
