@@ -3,7 +3,6 @@ import brickpi3
 import math
 import time
 import MURbot_GUIclasses as MG
-import MURbot_main as Mm
 
 
 '''Global variables'''
@@ -11,7 +10,7 @@ BP = brickpi3.BrickPi3()
 BN = BNO055.BNO055()
 POWER = 0
 HEADING = 0                 #in degrees
-SPEED = [0, 0]
+SPEED = [time.time(), 0]
 
 
 '''MURbot Robotic Functions'''
@@ -57,7 +56,7 @@ def setup():
 def move(power):
     BP.set_motor_power(BP.PORT_B, power)
     BP.set_motor_power(BP.PORT_C, -power)
-    #print('Power: ' + str(power))
+    print('Power: ' + str(power))
     speed_and_orientation()
     return power
 
@@ -70,7 +69,7 @@ def turn(direction):
     if direction == 'Straight':
         BP.set_motor_position(BP.PORT_D, 0)
     speed_and_orientation()
-    #print('Direction: ' + direction)
+    print('Direction: ' + direction)
 
 
 def tilt(tilt_distance, direction, duration):
@@ -79,26 +78,26 @@ def tilt(tilt_distance, direction, duration):
     global HEADING
     timer = 0
     start = time.time()
-    #print('Duration: ' + str(duration))
+    print('Duration: ' + str(duration))
     while timer < duration or duration < 0:
         try:
             if direction > 0:
                 S1_value = BP.get_sensor(BP.PORT_1)
-                #print('S1: ' + str(S1_value), end=" ")
+                print('S1: ' + str(S1_value), end=" ")
                 if S1_value < tilt_distance:
-                    #print('TILT')
+                    print('TILT')
                     break
             if direction < 0:
                 S4_value = BP.get_sensor(BP.PORT_4)
-                #print('S4: ' + str(S4_value), end=" ")
+                print('S4: ' + str(S4_value), end=" ")
                 if S4_value < tilt_distance:
-                    #print('TILT')
+                    print('TILT')
                     break
         except:
             continue
         end = time.time()
         timer = round(end - start)
-        #print('Timer: ' + str(timer))
+        print('Timer: ' + str(timer))
         speed_and_orientation()
         time.sleep(0.1)
 
@@ -107,11 +106,14 @@ def speed_and_orientation():
     global SPEED
     initial_speed = SPEED[1]
     heading = BN.read_euler()
-    acc = BN.read_linear_accelration()
+    a = BN.read_linear_acceleration() * 100
+    acc = a[1]
+    if acc < -10 or acc > 10:
+        acc = 0        
     t1 = time.time()
-    SPEED[1] = initial_speed + acc[1] * (t1 - SPEED[0]))
+    SPEED[1] = round(initial_speed + acc * (t1 - SPEED[0]), 2)
     SPEED[0] = t1
-    print('Speed: ' + str(SPEED[1]) + ' cm/s')
+    print('Speed: ' + str(SPEED[1]) + ' m/s  |  Heading: ' + str(heading[0]) + '  |  Y-acc: ' + str(acc))
 
 
 def radar(dps, ch):
@@ -186,7 +188,6 @@ def whatever():
 
 
 def run():
-    MG.NavCanvas(Mm.root)
     global POWER
     POWER = 30
     reverse = -1 * POWER

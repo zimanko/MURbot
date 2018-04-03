@@ -58,13 +58,13 @@ class NavCanvas(TK.Canvas):
         canvas.update()
 
     def left(event):
-        global MF.HEADING
+        global HEADING
         MF.HEADING -= math.pi * 0.01
         redraw(event)
         canvas.update()
 
     def right(event):
-        global MF.HEADING
+        global HEADING
         MF.HEADING += math.pi * 0.01
         redraw(event)
         canvas.update()
