@@ -23,10 +23,8 @@ def reset_all():
 def setup():
     # Set motor positioning in a high state
     print('Set motor positioning in a high state...', end="")
-    BP.set_motor_position_kp(BP.PORT_A, 120)
-    BP.set_motor_position_kd(BP.PORT_A, 100)
-    BP.set_motor_position_kp(BP.PORT_D, 120)
-    BP.set_motor_position_kd(BP.PORT_D, 100)
+    BP.set_motor_position_kp(BP.PORT_C, 120)
+    BP.set_motor_position_kd(BP.PORT_C, 100)
     print('Done')
 
     # Setup Ultrasonic sensors
@@ -54,10 +52,10 @@ def setup():
 
 
 def move(power):
-    BP.set_motor_power(BP.PORT_B, power)
-    BP.set_motor_power(BP.PORT_C, -power)
+    BP.set_motor_power(BP.PORT_A, power)
+    BP.set_motor_power(BP.PORT_D, power)
     print('Power: ' + str(power))
-    speed_and_orientation()
+    #speed_and_orientation()
     return power
 
 
@@ -190,21 +188,9 @@ def whatever():
 def run():
     global POWER
     POWER = 30
-    reverse = -1 * POWER
     try:
         while True:
             move(POWER)
-            tilt(50, POWER, -1)
-            move(0)
-            time.sleep(0.5)
-            turn('Right')
-            time.sleep(0.5)
-            move(reverse)
-            tilt(50, reverse, 3)
-            move(0)
-            time.sleep(0.5)
-            turn('Straight')
-            time.sleep(0.5)
     except KeyboardInterrupt:
         reset_all()
 
