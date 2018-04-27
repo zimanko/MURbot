@@ -59,14 +59,25 @@ def move(power):
     return power
 
 
-def turn(direction):
+def turn(direction, power):
+    p = -1 * power
+    #BP.set_motor_power(BP.PORT_A, 0)
+    #BP.set_motor_power(BP.PORT_D, 0)
+    #time.sleep(1)
     if direction == 'Left':
-        BP.set_motor_position(BP.PORT_D, 250)
+        BP.set_motor_power(BP.PORT_A, p)
+        BP.set_motor_power(BP.PORT_D, power)
+        time.sleep(2)
+        #BP.set_motor_power(BP.PORT_A, 0)
+        #BP.set_motor_power(BP.PORT_D, 0)
     if direction == 'Right':
-        BP.set_motor_position(BP.PORT_D, -250)
-    if direction == 'Straight':
-        BP.set_motor_position(BP.PORT_D, 0)
+        BP.set_motor_power(BP.PORT_A, power)
+        BP.set_motor_power(BP.PORT_D, p)
+        time.sleep(2)
+        #BP.set_motor_power(BP.PORT_A, 0)
+        #BP.set_motor_power(BP.PORT_D, 0)
     speed_and_orientation()
+    #time.sleep(1)
     print('Direction: ' + direction)
 
 
@@ -187,10 +198,12 @@ def whatever():
 
 def run():
     global POWER
-    POWER = 30
+    POWER = -30
     try:
         while True:
             move(POWER)
+            time.sleep(1)
+            turn('Left', POWER)
     except KeyboardInterrupt:
         reset_all()
 
