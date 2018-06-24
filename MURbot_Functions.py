@@ -23,14 +23,16 @@ def reset_all():
 def setup():
     # Set motor positioning in a high state
     print('Set motor positioning in a high state...', end="")
-    BP.set_motor_position_kp(BP.PORT_C, 120)
-    BP.set_motor_position_kd(BP.PORT_C, 100)
+    BP.set_motor_position_kp(BP.PORT_A, 120)
+    BP.set_motor_position_kd(BP.PORT_A, 100)
+    BP.set_motor_position_kp(BP.PORT_D, 120)
+    BP.set_motor_position_kd(BP.PORT_D, 100)
     print('Done')
 
     # Setup Ultrasonic sensors
     print('Setup Ultrasonic sensors...', end="")
     BP.set_sensor_type(BP.PORT_1, BP.SENSOR_TYPE.EV3_ULTRASONIC_CM)
-    BP.set_sensor_type(BP.PORT_4, BP.SENSOR_TYPE.EV3_ULTRASONIC_CM)
+    BP.set_sensor_type(BP.PORT_3, BP.SENSOR_TYPE.EV3_ULTRASONIC_CM)
     print('Done')
 
     # Calibrate IMU Sensor
@@ -52,32 +54,35 @@ def setup():
 
 
 def move(power):
-    BP.set_motor_power(BP.PORT_A, power)
-    BP.set_motor_power(BP.PORT_D, power)
+    BP.set_motor_power(BP.PORT_B, -power)
+    BP.set_motor_power(BP.PORT_C, -power)
     print('Power: ' + str(power))
     #speed_and_orientation()
     return power
 
 
 def turn(direction, power):
-    p = -1 * power
-    #BP.set_motor_power(BP.PORT_A, 0)
-    #BP.set_motor_power(BP.PORT_D, 0)
-    #time.sleep(1)
+    BP.set_motor_power(BP.PORT_B, 0)
+    BP.set_motor_power(BP.PORT_C, 0)
+    time.sleep(1)
     if direction == 'Left':
-        BP.set_motor_power(BP.PORT_A, p)
-        BP.set_motor_power(BP.PORT_D, power)
+        BP.set_motor_position(BP.PORT_D, -200)
+        time.sleep(1)
+        BP.set_motor_power(BP.PORT_B, 0)
+        BP.set_motor_power(BP.PORT_C, -power)
         time.sleep(2)
-        #BP.set_motor_power(BP.PORT_A, 0)
-        #BP.set_motor_power(BP.PORT_D, 0)
+        BP.set_motor_power(BP.PORT_B, 0)
+        BP.set_motor_power(BP.PORT_C, 0)
+        time.sleep(1)
+        BP.set_motor_position(BP.PORT_D, 0)
     if direction == 'Right':
         BP.set_motor_power(BP.PORT_A, power)
         BP.set_motor_power(BP.PORT_D, p)
         time.sleep(2)
         #BP.set_motor_power(BP.PORT_A, 0)
         #BP.set_motor_power(BP.PORT_D, 0)
-    speed_and_orientation()
-    #time.sleep(1)
+    #speed_and_orientation()
+    time.sleep(1)
     print('Direction: ' + direction)
 
 
@@ -198,11 +203,11 @@ def whatever():
 
 def run():
     global POWER
-    POWER = -30
+    POWER = 40
     try:
         while True:
             move(POWER)
-            time.sleep(1)
+            time.sleep(2)      
             turn('Left', POWER)
     except KeyboardInterrupt:
         reset_all()
