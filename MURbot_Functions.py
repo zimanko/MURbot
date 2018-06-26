@@ -11,6 +11,7 @@ BN = BNO055.BNO055()
 POWER = 0
 HEADING = 0                 #in degrees
 SPEED = [time.time(), 0]
+TILT = 30                   #tilting distance in cm
 
 
 '''MURbot Robotic Functions'''
@@ -54,66 +55,39 @@ def setup():
 
 
 def move(power):
-    BP.set_motor_power(BP.PORT_B, -power)
-    BP.set_motor_power(BP.PORT_C, -power)
-    print('Power: ' + str(power))
-    #speed_and_orientation()
-    return power
-
-
-def turn(direction, power):
+    while BP.get_sensor(BP.PORT_3) > TILT:
+        BP.set_motor_power(BP.PORT_B, power)
+        BP.set_motor_power(BP.PORT_C, -power)
+        # print('Power: ' + str(power))
+        # speed_and_orientation()
     BP.set_motor_power(BP.PORT_B, 0)
     BP.set_motor_power(BP.PORT_C, 0)
-    time.sleep(1)
+    time.sleep(0.5)
+
+
+def turn(direction, degree):
+    heading_start = BN.read_euler()
+
     if direction == 'Left':
-        BP.set_motor_position(BP.PORT_D, -200)
-        time.sleep(1)
-        BP.set_motor_power(BP.PORT_B, 0)
-        BP.set_motor_power(BP.PORT_C, -power)
-        time.sleep(2)
+        BP.set_motor_position(BP.PORT_D, 250)
+        while abs(heading_start[0] - BN.read_euler()[0]) < degree:
+            BP.set_motor_power(BP.PORT_B, 0)
+            BP.set_motor_power(BP.PORT_C, -power)
+            print('Orientation: ' + BN.read_euler()[0])
         BP.set_motor_power(BP.PORT_B, 0)
         BP.set_motor_power(BP.PORT_C, 0)
-        time.sleep(1)
-        BP.set_motor_position(BP.PORT_D, 0)
+
     if direction == 'Right':
-        BP.set_motor_power(BP.PORT_A, power)
-        BP.set_motor_power(BP.PORT_D, p)
-        time.sleep(2)
-        #BP.set_motor_power(BP.PORT_A, 0)
-        #BP.set_motor_power(BP.PORT_D, 0)
-    #speed_and_orientation()
-    time.sleep(1)
-    print('Direction: ' + direction)
+        BP.set_motor_position(BP.PORT_D, -250)
+        while abs(heading_start[0] - BN.read_euler()[0]) < degree:
+            BP.set_motor_power(BP.PORT_B, power)
+            BP.set_motor_power(BP.PORT_C, 0)
+            print('Orientation: ' + BN.read_euler()[0])
+        BP.set_motor_power(BP.PORT_B, 0)
+        BP.set_motor_power(BP.PORT_C, 0)
 
-
-def tilt(tilt_distance, direction, duration):
-    # pass the motor power to the direction and it use the sign of the power to detect direction
-    # duration: how long would the function run in seconds (any negative number means infinite)
-    global HEADING
-    timer = 0
-    start = time.time()
-    print('Duration: ' + str(duration))
-    while timer < duration or duration < 0:
-        try:
-            if direction > 0:
-                S1_value = BP.get_sensor(BP.PORT_1)
-                print('S1: ' + str(S1_value), end=" ")
-                if S1_value < tilt_distance:
-                    print('TILT')
-                    break
-            if direction < 0:
-                S4_value = BP.get_sensor(BP.PORT_4)
-                print('S4: ' + str(S4_value), end=" ")
-                if S4_value < tilt_distance:
-                    print('TILT')
-                    break
-        except:
-            continue
-        end = time.time()
-        timer = round(end - start)
-        print('Timer: ' + str(timer))
-        speed_and_orientation()
-        time.sleep(0.1)
+    BP.set_motor_position(BP.PORT_D, 0)
+    time.sleep(0.5)
 
 
 def speed_and_orientation():
@@ -203,12 +177,11 @@ def whatever():
 
 def run():
     global POWER
-    POWER = 40
+    POWER = 30
     try:
         while True:
             move(POWER)
-            time.sleep(2)      
-            turn('Left', POWER)
+            turn('Left', 60)
     except KeyboardInterrupt:
         reset_all()
 
