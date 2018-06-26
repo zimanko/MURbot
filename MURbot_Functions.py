@@ -65,23 +65,13 @@ def move(power):
     time.sleep(0.5)
 
 
-def turn(direction, degree):
-    heading_start = BN.read_euler()
-
-    if direction == 'Left':
-        BP.set_motor_position(BP.PORT_D, 250)
-        while abs(heading_start[0] - BN.read_euler()[0]) < degree:
+def turn(degree):
+    heading_start = BN.read_euler()[0]
+    heading_end = heading_start + degree
+    BP.set_motor_position(BP.PORT_D, 285)
+    while abs(heading_end - BN.read_euler()[0]) < 0:
             BP.set_motor_power(BP.PORT_B, 0)
             BP.set_motor_power(BP.PORT_C, -power)
-            print('Orientation: ' + BN.read_euler()[0])
-        BP.set_motor_power(BP.PORT_B, 0)
-        BP.set_motor_power(BP.PORT_C, 0)
-
-    if direction == 'Right':
-        BP.set_motor_position(BP.PORT_D, -250)
-        while abs(heading_start[0] - BN.read_euler()[0]) < degree:
-            BP.set_motor_power(BP.PORT_B, power)
-            BP.set_motor_power(BP.PORT_C, 0)
             print('Orientation: ' + BN.read_euler()[0])
         BP.set_motor_power(BP.PORT_B, 0)
         BP.set_motor_power(BP.PORT_C, 0)
@@ -177,7 +167,7 @@ def whatever():
 
 def run():
     global POWER
-    POWER = 30
+    POWER = 10
     try:
         while True:
             move(POWER)
