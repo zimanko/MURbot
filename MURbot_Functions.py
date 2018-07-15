@@ -60,13 +60,19 @@ def freeride():
 	print('Input device: ' + device)
 
 	for event in device.read_loop():
-		if event.code == ED.ecodes.ABS_Y :
+		if event.code == ED.ecodes.ABS_Y:
 			lwp = rwp = int((event.value - 128) / 2)
-			move(lwp, rwp)
-			print(event.code)
 		if event.code == ED.ecodes.ABS_Z:
-			...
-
+            turn_value = int((event.value - 127.5)
+            if turn_value < 0:
+                turn = 2.2 * turn_value
+                modifier = 1 - (-128 / turn_value)
+                lwp = modifier * lwp
+            if turn_value > 0:
+                turn = 2.2 * turn_value
+                modifier = 1 - (128 / turn_value)
+                rwp = modifier * rwp
+    print(lwp, rwp, turn)
 
 def move(power1, power2):
     if BP.get_sensor(BP.PORT_3) > TILT:
