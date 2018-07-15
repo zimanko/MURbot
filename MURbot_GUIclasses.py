@@ -35,6 +35,9 @@ class MainWndButtons(TK.Button):
     def Start():
         MF.run()
 
+    def Freeride():
+        MF.freeride()
+
     def Stop():
         MF.reset_all()
 

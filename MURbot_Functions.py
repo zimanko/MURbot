@@ -3,6 +3,7 @@ import brickpi3
 import math
 import time
 import MURbot_GUIclasses as MG
+import evdev as ED
 
 
 '''Global variables'''
@@ -54,31 +55,44 @@ def setup():
     time.sleep(3)
 
 
-def move(power):
-    while BP.get_sensor(BP.PORT_3) > TILT:
-        BP.set_motor_power(BP.PORT_B, power)
-        BP.set_motor_power(BP.PORT_C, -power)
-        # print('Power: ' + str(power))
+def freeride():
+	device = ED.InputDevice('/dev/input/event0')
+	print('Input device: ' + device)
+
+	for event in device.read_loop():
+		if event.code == ED.ecodes.ABS_Y :
+			lwp = rwp = int((event.value - 128) / 2)
+			move(lwp, rwp)
+			print(event.code)
+		if event.code == ED.ecodes.ABS_Z:
+			...
+
+
+def move(power1, power2):
+    if BP.get_sensor(BP.PORT_3) > TILT:
+        BP.set_motor_power(BP.PORT_B, power1)
+        BP.set_motor_power(BP.PORT_C, power2)
+        #print('Power: ' + str(power))
         # speed_and_orientation()
-    BP.set_motor_power(BP.PORT_B, 0)
-    BP.set_motor_power(BP.PORT_C, 0)
-    time.sleep(0.5)
+    #BP.set_motor_power(BP.PORT_B, 0)
+    #BP.set_motor_power(BP.PORT_C, 0)
+    #time.sleep(0.5)
 
-
+'''
 def turn(degree):
     heading_start = BN.read_euler()[0]
     heading_end = heading_start + degree
     BP.set_motor_position(BP.PORT_D, 285)
     while abs(heading_end - BN.read_euler()[0]) < 0:
-            BP.set_motor_power(BP.PORT_B, 0)
-            BP.set_motor_power(BP.PORT_C, -power)
-            print('Orientation: ' + BN.read_euler()[0])
-        BP.set_motor_power(BP.PORT_B, 0)
-        BP.set_motor_power(BP.PORT_C, 0)
+		BP.set_motor_power(BP.PORT_B, 0)
+		BP.set_motor_power(BP.PORT_C, -power)
+		print('Orientation: ' + BN.read_euler()[0])
+		BP.set_motor_power(BP.PORT_B, 0)
+		BP.set_motor_power(BP.PORT_C, 0)
 
     BP.set_motor_position(BP.PORT_D, 0)
     time.sleep(0.5)
-
+'''
 
 def speed_and_orientation():
     global SPEED
@@ -166,14 +180,7 @@ def whatever():
 
 
 def run():
-    global POWER
-    POWER = 10
-    try:
-        while True:
-            move(POWER)
-            turn('Left', 60)
-    except KeyboardInterrupt:
-        reset_all()
+	return 0
 
 
 
