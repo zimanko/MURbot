@@ -17,7 +17,7 @@ TILT = 30                   #tilting distance in cm
 
 '''MURbot Robotic Functions'''
 def reset_all():
-    move(0)
+    move(0, 0)
     BP.set_motor_position(BP.PORT_D, 0)
     BP.reset_all()
 
@@ -57,32 +57,52 @@ def setup():
 
 def freeride():
 	device = ED.InputDevice('/dev/input/event0')
-	print('Input device: ' + device)
-
+	print('Input device: ' + str(device.name))
+	past_wp, power, turn_value = 0, 0, 0
+	t0 = int(time.time())
+	
 	for event in device.read_loop():
 		if event.code == ED.ecodes.ABS_Y:
-			lwp = rwp = int((event.value - 128) / 2)
+			power = int((event.value - 128) / 2)
 		if event.code == ED.ecodes.ABS_Z:
-            turn_value = int((event.value - 127.5)
-            if turn_value < 0:
-                turn = 2.2 * turn_value
-                modifier = 1 - (-128 / turn_value)
-                lwp = modifier * lwp
-            if turn_value > 0:
-                turn = 2.2 * turn_value
-                modifier = 1 - (128 / turn_value)
-                rwp = modifier * rwp
-    print(lwp, rwp, turn)
+			turn_value = int(event.value - 127.5)
+			modifier = 1 - abs(turn_value / 128)
+		BP.set_motor_position(BP.PORT_D, int(2.22 * turn_value))
+		
+		if BP.get_sensor(BP.PORT_3) < TILT and power < 0:
+			power = 0
+		elif BP.get_sensor(BP.PORT_1) < TILT and power > 0:
+			power = 0
+		else:
+			rwp, lwp = power, power
+		
+		if turn_value < 0:
+			lwp = int(modifier * power)
+		if turn_value > 0:
+			rwp = int(modifier * power)
+		
+		BP.set_motor_power(BP.PORT_B, lwp)
+		BP.set_motor_power(BP.PORT_C, rwp)
+		t1 = int(time.time())
+		print(t1)
+		
+		#if past_wp != (lwp + rwp) or (t1 - t0) > 5:
+			#speed_and_orientation()
+			#t1 = t0
+		
+		#past_wp = lwp + rwp
+		
 
-def move(power1, power2):
-    if BP.get_sensor(BP.PORT_3) > TILT:
-        BP.set_motor_power(BP.PORT_B, power1)
-        BP.set_motor_power(BP.PORT_C, power2)
+
+def move(lwp, rwp):
+    while BP.get_sensor(BP.PORT_3) > TILT:
+        BP.set_motor_power(BP.PORT_B, lwp)
+        BP.set_motor_power(BP.PORT_C, rwp)
         #print('Power: ' + str(power))
-        # speed_and_orientation()
-    #BP.set_motor_power(BP.PORT_B, 0)
-    #BP.set_motor_power(BP.PORT_C, 0)
-    #time.sleep(0.5)
+        #speed_and_orientation()
+    BP.set_motor_power(BP.PORT_B, 0)
+    BP.set_motor_power(BP.PORT_C, 0)
+    time.sleep(0.5)
 
 '''
 def turn(degree):
