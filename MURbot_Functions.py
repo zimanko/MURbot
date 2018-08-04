@@ -19,6 +19,7 @@ TILT = 30                   #tilting distance in cm
 def reset_all():
     move(0, 0)
     BP.set_motor_position(BP.PORT_D, 0)
+    BP.set_motor_position(BP.PORT_A, 0)
     BP.reset_all()
 
 
@@ -53,21 +54,21 @@ def setup():
     print('Done (' + str(status) + ')')
 
     time.sleep(3)
+    print('Redy to go!')
 
 
 def freeride():
 	device = ED.InputDevice('/dev/input/event0')
 	print('Input device: ' + str(device.name))
-	past_wp, power, turn_value = 0, 0, 0
-	t0 = int(time.time())
+	power, turn_value = 0, 0
 	
 	for event in device.read_loop():
 		if event.code == ED.ecodes.ABS_Y:
 			power = int((event.value - 128) / 2)
 		if event.code == ED.ecodes.ABS_Z:
 			turn_value = int(event.value - 127.5)
-			modifier = 1 - abs(turn_value / 128)
-		BP.set_motor_position(BP.PORT_D, int(2.22 * turn_value))
+			modifier = 1 - abs(turn_value / 250)
+		BP.set_motor_position(BP.PORT_D, int(1.11 * turn_value))
 		
 		if BP.get_sensor(BP.PORT_3) < TILT and power < 0:
 			power = 0
@@ -82,16 +83,7 @@ def freeride():
 			rwp = int(modifier * power)
 		
 		BP.set_motor_power(BP.PORT_B, lwp)
-		BP.set_motor_power(BP.PORT_C, rwp)
-		t1 = int(time.time())
-		print(t1)
-		
-		#if past_wp != (lwp + rwp) or (t1 - t0) > 5:
-			#speed_and_orientation()
-			#t1 = t0
-		
-		#past_wp = lwp + rwp
-		
+		BP.set_motor_power(BP.PORT_C, rwp)		
 
 
 def move(lwp, rwp):
@@ -206,7 +198,7 @@ def whatever():
 
 
 def run():
-	return 0
+	MG.NavCanvas(root)
 
 
 
