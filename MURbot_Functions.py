@@ -1,18 +1,20 @@
-from di_sensors import BNO055
-import brickpi3
+#from di_sensors import BNO055
+#import brickpi3
 import math
 import time
 import MURbot_GUIclasses as MG
-import evdev as ED
+#import evdev as ED
 
 
 '''Global variables'''
-BP = brickpi3.BrickPi3()
-BN = BNO055.BNO055()
+#BP = brickpi3.BrickPi3()
+#BN = BNO055.BNO055()
 POWER = 0
 HEADING = 0                 #in degrees
 SPEED = [time.time(), 0]
 TILT = 30                   #tilting distance in cm
+CURRENT_OBS_DATA = []
+RADARDATA = []
 
 
 '''MURbot Robotic Functions'''
@@ -54,7 +56,7 @@ def setup():
     print('Done (' + str(status) + ')')
 
     time.sleep(3)
-    print('Redy to go!')
+    print('Ready to go!')
 
 
 def freeride():
@@ -198,7 +200,7 @@ def whatever():
 
 
 def run():
-	MG.NavCanvas(root)
+	MG.NavCanvas()
 
 
 
