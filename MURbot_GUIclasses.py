@@ -30,7 +30,7 @@ class MainWndButtons(TK.Button):
                     activebackground = 'white',
                     activeforeground = 'grey',
                     bd = 1)
-        self.pack(side='top', anchor='e', padx=10, pady=5)
+        self.pack(side='top', anchor='n', padx=10, pady=5)
 
     def Setup():
         MF.setup()
@@ -45,7 +45,7 @@ class MainWndButtons(TK.Button):
         MF.reset_all()
 
 class NavCanvas(TK.Canvas):
-    def __init__(self):
+    def __init__(self, parent):
 
         test_radardata = []
         a = 1
@@ -137,18 +137,13 @@ class NavCanvas(TK.Canvas):
                                    tag='Env_dots')
                 i += 5
 
-        root2 = TK.Tk()
-        canvas = TK.Canvas(root2, width=600, height=400, bg='white')
+        canvas = TK.Canvas(parent, bg='white')
         canvas.bind('<Configure>', redraw)
         canvas.bind('<Up>', forward)
         canvas.bind('<Down>', backward)
         canvas.bind('<Left>', left)
         canvas.bind('<Right>', right)
         canvas.bind('<Control_L>', env_dots)
-        canvas.pack(side='bottom', expand=1, fill='both')
+        canvas.pack(expand=1, fill='both')
         canvas.focus_force()
-
-        root2.title('MURbot tracking')
-        root2.mainloop()
-
 

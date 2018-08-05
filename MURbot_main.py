@@ -22,22 +22,26 @@ import tkinter as TK
 from MURbot_GUIclasses import *
 
 root = TK.Tk()
-root.resizable(width=False, height=False)
 
 main_wnd = TK.Frame(root)
-main_wnd.config(bg='white')
-main_wnd.pack(expand=1, fill='both')
+main_wnd.config(bg='white', width=10)
+main_wnd.pack(fill='both', side='left')
 
 TK.Label(main_wnd,
+         height = 4,
+         width = 9,
          text='MURbot',
          bg='white',
          fg='grey',
-         font=('Piboto Light', 18, 'normal')).pack(side='left', padx=20)
+         font=('Piboto Light', 18, 'normal')).pack(side='top')
 
 MainWndButtons(main_wnd, text='Setup', command=MainWndButtons.Setup)
 MainWndButtons(main_wnd, text='Start', command=MainWndButtons.Start)
 MainWndButtons(main_wnd, text='Freeride', command=MainWndButtons.Freeride)
 MainWndButtons(main_wnd, text='Stop', command=MainWndButtons.Stop)
 
+NavCanvas(root)
+
 root.title('MURbot v0.2')
 root.mainloop()
+
