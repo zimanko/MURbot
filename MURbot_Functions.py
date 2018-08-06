@@ -200,7 +200,7 @@ def whatever():
 
 
 def run():
-	MG.NavCanvas()
+	MG.NavCanvas(MG.CANVAS)
 
 
 

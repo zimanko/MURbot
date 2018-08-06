@@ -40,7 +40,7 @@ MainWndButtons(main_wnd, text='Start', command=MainWndButtons.Start)
 MainWndButtons(main_wnd, text='Freeride', command=MainWndButtons.Freeride)
 MainWndButtons(main_wnd, text='Stop', command=MainWndButtons.Stop)
 
-NavCanvas(root)
+CreatCanvas(root)
 
 root.title('MURbot v0.2')
 root.mainloop()

@@ -12,13 +12,14 @@ X_ZERO = 0
 Y_ZERO = 0
 OBS_WIN_W = 0
 OBS_WIN_H = 0
+CANVAS = 0
 
 
 '''GUI Classes and Functions'''
 class MainWndButtons(TK.Button):
-    def __init__(self, parent, **configs):
-        TK.Button.__init__(self, parent, **configs)
-        self.config(fg = 'grey',
+    def __init__(canvas, parent, **configs):
+        TK.Button.__init__(canvas, parent, **configs)
+        canvas.config(fg = 'grey',
                     bg = 'white',
                     font = ('Helvetic', 10, 'normal'),
                     height = 1,
@@ -30,7 +31,7 @@ class MainWndButtons(TK.Button):
                     activebackground = 'white',
                     activeforeground = 'grey',
                     bd = 1)
-        self.pack(side='top', anchor='n', padx=10, pady=5)
+        canvas.pack(side='top', anchor='n', padx=10, pady=5)
 
     def Setup():
         MF.setup()
@@ -45,7 +46,7 @@ class MainWndButtons(TK.Button):
         MF.reset_all()
 
 class NavCanvas(TK.Canvas):
-    def __init__(self, parent):
+    def __init__(self, canvas):
 
         test_radardata = []
         a = 1
@@ -137,13 +138,17 @@ class NavCanvas(TK.Canvas):
                                    tag='Env_dots')
                 i += 5
 
-        canvas = TK.Canvas(parent, bg='white')
         canvas.bind('<Configure>', redraw)
         canvas.bind('<Up>', forward)
         canvas.bind('<Down>', backward)
         canvas.bind('<Left>', left)
         canvas.bind('<Right>', right)
         canvas.bind('<Control_L>', env_dots)
-        canvas.pack(expand=1, fill='both')
         canvas.focus_force()
+
+def CreatCanvas(parent):
+    global CANVAS
+    CANVAS = TK.Canvas(parent, bg='white', highlightthickness=0.5, highlightcolor='#f6f6f6')
+    CANVAS.pack(expand=1, fill='both')
+
 
