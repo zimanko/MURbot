@@ -17,6 +17,7 @@ CURRENT_OBS_DATA = []
 RADARDATA = []
 
 
+
 '''MURbot Robotic Functions'''
 def reset_all():
     move(0, 0)
@@ -200,7 +201,7 @@ def whatever():
 
 
 def run():
-	MG.NavCanvas(MG.CANVAS)
+	MG.NavCanvas(MG.CANVAS_W, MG.SCALE_W)
 
 
 

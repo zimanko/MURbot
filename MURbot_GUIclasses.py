@@ -12,8 +12,9 @@ X_ZERO = 0
 Y_ZERO = 0
 OBS_WIN_W = 0
 OBS_WIN_H = 0
-CANVAS = 0
-
+CANVAS_W = 0
+SCALE_W = 0
+SCALE = 1
 
 '''GUI Classes and Functions'''
 class MainWndButtons(TK.Button):
@@ -45,8 +46,9 @@ class MainWndButtons(TK.Button):
     def Stop():
         MF.reset_all()
 
+
 class NavCanvas(TK.Canvas):
-    def __init__(self, canvas):
+    def __init__(self, canvas, scale):
 
         test_radardata = []
         a = 1
@@ -110,7 +112,7 @@ class NavCanvas(TK.Canvas):
         def murbot_pos(X_ZERO, Y_ZERO):
             angle = [0, 4.8, 7.2]
             murbot_pos_coords = [0, 0, 0, 0, 0, 0]
-            radius = 15
+            radius = SCALE * 15
             for i in range(len(angle)):
                 murbot_pos_coords[2 * i] = int(radius * math.cos((angle[i] * math.pi / 6) + MF.HEADING))
                 murbot_pos_coords[2 * i + 1] = int(radius * math.sin((angle[i] * math.pi / 6) + MF.HEADING))
@@ -130,15 +132,16 @@ class NavCanvas(TK.Canvas):
             while i < len(test_radardata):
                 tup = test_radardata[i]
                 alpha = tup[0] * math.pi / 180
-                x = math.sin(alpha) * tup[1]
-                y = math.cos(alpha) * tup[1]
-                canvas.create_oval(X_ZERO + x + 2, Y_ZERO + y + 2,
-                                   X_ZERO + x - 2, Y_ZERO + y - 2,
+                x = math.sin(alpha) * tup[1] * SCALE
+                y = math.cos(alpha) * tup[1] * SCALE
+                canvas.create_oval(X_ZERO + x + 2 * SCALE, Y_ZERO + y + 2 * SCALE,
+                                   X_ZERO + x - 2 * SCALE, Y_ZERO + y - 2 * SCALE,
                                    fill='red',
                                    tag='Env_dots')
                 i += 5
 
         canvas.bind('<Configure>', redraw)
+        canvas.bind('<FocusIn>', redraw)
         canvas.bind('<Up>', forward)
         canvas.bind('<Down>', backward)
         canvas.bind('<Left>', left)
@@ -146,9 +149,30 @@ class NavCanvas(TK.Canvas):
         canvas.bind('<Control_L>', env_dots)
         canvas.focus_force()
 
-def CreatCanvas(parent):
-    global CANVAS
-    CANVAS = TK.Canvas(parent, bg='white', highlightthickness=0.5, highlightcolor='#f6f6f6')
-    CANVAS.pack(expand=1, fill='both')
+        SCALE_W.pack(pady=20, side='top')
+
+
+def CreateCanvasAndScale(parent_for_canvas, parent_for_scale):
+    global CANVAS_W
+    CANVAS_W = TK.Canvas(parent_for_canvas, bg='white', highlightthickness=0.5, highlightcolor='#f6f6f6')
+    CANVAS_W.pack(expand=1, fill='both')
+
+    global SCALE_W
+    SCALE_W = TK.Scale(parent_for_scale,
+                       bg='white',
+                       from_=0.5,
+                       to=1.5,
+                       resolution=-1,
+                       showvalue=0,
+                       orient='horizontal',
+                       sliderrelief='ridge',
+                       highlightthickness=0,
+                       troughcolor='#f6f6f6',
+                       command=SetScaleValue)
+    SCALE_W.set(1)
+
+def SetScaleValue(scalevalue):
+    global SCALE
+    SCALE = float(scalevalue)
 
 
