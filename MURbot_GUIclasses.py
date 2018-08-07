@@ -149,12 +149,17 @@ class NavCanvas(TK.Canvas):
         canvas.bind('<Control_L>', env_dots)
         canvas.focus_force()
 
-        SCALE_W.pack(pady=20, side='top')
+        scale.bind('<Motion>', redraw)
+        scale.pack(pady=20, side='top')
 
 
 def CreateCanvasAndScale(parent_for_canvas, parent_for_scale):
     global CANVAS_W
-    CANVAS_W = TK.Canvas(parent_for_canvas, bg='white', highlightthickness=0.5, highlightcolor='#f6f6f6')
+    CANVAS_W = TK.Canvas(parent_for_canvas,
+                         bg='white',
+                         highlightthickness=0.5,
+                         highlightcolor='#f6f6f6',
+                         height=350)
     CANVAS_W.pack(expand=1, fill='both')
 
     global SCALE_W
@@ -170,6 +175,7 @@ def CreateCanvasAndScale(parent_for_canvas, parent_for_scale):
                        troughcolor='#f6f6f6',
                        command=SetScaleValue)
     SCALE_W.set(1)
+
 
 def SetScaleValue(scalevalue):
     global SCALE
