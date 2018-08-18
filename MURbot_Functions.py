@@ -14,7 +14,7 @@ HEADING = 0                 #in degrees
 SPEED = [time.time(), 0]
 TILT = 30                   #tilting distance in cm
 CURRENT_OBS_DATA = []
-RADARDATA = []
+RADARDATA = []              #[[time, data],[time, data]]
 
 
 

@@ -96,11 +96,11 @@ class NavCanvas(TK.Canvas):
                 OBS_WIN_W = win_w
                 OBS_WIN_H = win_h
                 canvas.update()
-            if X_MODIFIER < -100 or Y_MODIFIER < -100 or X_MODIFIER > 100 or Y_MODIFIER > 100:
-                canvas.move('Env_dots', PREV_X_MODIFIER - X_MODIFIER, PREV_Y_MODIFIER - Y_MODIFIER)
-                canvas.update()
-                X_MODIFIER = PREV_X_MODIFIER
-                Y_MODIFIER = PREV_Y_MODIFIER
+            #if X_MODIFIER < -100 or Y_MODIFIER < -100 or X_MODIFIER > 100 or Y_MODIFIER > 100:
+                #canvas.move('Env_dots', PREV_X_MODIFIER - X_MODIFIER, PREV_Y_MODIFIER - Y_MODIFIER)
+                #canvas.update()
+                #X_MODIFIER = PREV_X_MODIFIER
+                #Y_MODIFIER = PREV_Y_MODIFIER
             else:
                 X_ZERO = win_w / 2 + X_MODIFIER
                 Y_ZERO = win_h / 2 + Y_MODIFIER
@@ -123,6 +123,8 @@ class NavCanvas(TK.Canvas):
                                   fill='light green',
                                   outline='green',
                                   tags='MURbot')
+            MURbot = canvas.coords('MURbot')
+            print(MURbot)
 
         def env_dots(event):
             global OBS_WIN_W, OBS_WIN_H
@@ -140,6 +142,19 @@ class NavCanvas(TK.Canvas):
                                    tag='Env_dots')
                 i += 5
 
+        def scroll_right(event):
+            canvas.xview_scroll(1, TK.UNITS)
+
+        def scroll_left(event):
+            canvas.xview_scroll(-1, TK.UNITS)
+
+        def scroll_up(event):
+            canvas.yview_scroll(-1, TK.UNITS)
+
+        def scroll_down(event):
+            canvas.yview_scroll(1, TK.UNITS)
+
+
         canvas.bind('<Configure>', redraw)
         canvas.bind('<FocusIn>', redraw)
         canvas.bind('<Up>', forward)
@@ -147,6 +162,10 @@ class NavCanvas(TK.Canvas):
         canvas.bind('<Left>', left)
         canvas.bind('<Right>', right)
         canvas.bind('<Control_L>', env_dots)
+        canvas.bind('<KeyPress-d>', scroll_right)
+        canvas.bind('<KeyPress-a>', scroll_left)
+        canvas.bind('<KeyPress-w>', scroll_up)
+        canvas.bind('<KeyPress-s>', scroll_down)
         canvas.focus_force()
 
         scale.bind('<Motion>', redraw)
@@ -159,7 +178,10 @@ def CreateCanvasAndScale(parent_for_canvas, parent_for_scale):
                          bg='white',
                          highlightthickness=0.5,
                          highlightcolor='#f6f6f6',
-                         height=350)
+                         height=350,
+                         xscrollincrement=2,
+                         yscrollincrement=2)
+
     CANVAS_W.pack(expand=1, fill='both')
 
     global SCALE_W
