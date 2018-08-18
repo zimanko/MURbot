@@ -4,12 +4,8 @@ import random
 import math
 
 '''Global variables'''
-PREV_X_MODIFIER = 0
-PREV_Y_MODIFIER = 0
-X_MODIFIER = 0
-Y_MODIFIER = 0
-X_ZERO = 0
-Y_ZERO = 0
+POS_X = 0
+POS_Y = 0
 OBS_WIN_W = 0
 OBS_WIN_H = 0
 CANVAS_W = 0
@@ -59,72 +55,58 @@ class NavCanvas(TK.Canvas):
             a += 1
 
         def forward(event):
-            global X_MODIFIER, Y_MODIFIER
-            X_MODIFIER += 2 * math.cos(MF.HEADING)
-            Y_MODIFIER += 2 * math.sin(MF.HEADING)
-            redraw(event)
+            global POS_X, POS_Y
+            POS_X += 2 * math.cos(MF.HEADING)
+            POS_Y += 2 * math.sin(MF.HEADING)
+            print(POS_X, POS_Y)
+            redraw_canvas(event)
             canvas.update()
 
         def backward(event):
-            global X_MODIFIER, Y_MODIFIER
-            X_MODIFIER -= 2 * math.cos(MF.HEADING)
-            Y_MODIFIER -= 2 * math.sin(MF.HEADING)
-            redraw(event)
+            global POS_X, POS_Y
+            POS_X -= 2 * math.cos(MF.HEADING)
+            POS_Y -= 2 * math.sin(MF.HEADING)
+            print(POS_X, POS_Y)
+            redraw_canvas(event)
             canvas.update()
 
         def left(event):
             global HEADING
             MF.HEADING -= math.pi * 0.01
-            redraw(event)
+            redraw_canvas(event)
             canvas.update()
 
         def right(event):
             global HEADING
             MF.HEADING += math.pi * 0.01
-            redraw(event)
+            redraw_canvas(event)
             canvas.update()
 
-        def redraw(event):
-            global PREV_X_MODIFIER, PREV_Y_MODIFIER, X_MODIFIER, Y_MODIFIER, X_ZERO, Y_ZERO, OBS_WIN_W, OBS_WIN_H
-            win_w = canvas.winfo_width()
-            win_h = canvas.winfo_height()
-            if win_w != OBS_WIN_W or win_h != OBS_WIN_H:
-                try:
-                    canvas.move('Env_dots', (win_w - OBS_WIN_W) / 2, (win_h - OBS_WIN_H) / 2)
-                except:
-                    None
-                OBS_WIN_W = win_w
-                OBS_WIN_H = win_h
-                canvas.update()
-            #if X_MODIFIER < -100 or Y_MODIFIER < -100 or X_MODIFIER > 100 or Y_MODIFIER > 100:
-                #canvas.move('Env_dots', PREV_X_MODIFIER - X_MODIFIER, PREV_Y_MODIFIER - Y_MODIFIER)
-                #canvas.update()
-                #X_MODIFIER = PREV_X_MODIFIER
-                #Y_MODIFIER = PREV_Y_MODIFIER
-            else:
-                X_ZERO = win_w / 2 + X_MODIFIER
-                Y_ZERO = win_h / 2 + Y_MODIFIER
-                PREV_X_MODIFIER = X_MODIFIER
-                PREV_Y_MODIFIER = Y_MODIFIER
-                canvas.delete('MURbot')
-                murbot_pos(X_ZERO, Y_ZERO)
+        def redraw_canvas(event):
+            canvas.delete('MURbot')
+            draw_murbot(POS_X, POS_Y)
 
-        def murbot_pos(X_ZERO, Y_ZERO):
-            angle = [0, 4.8, 7.2]
-            murbot_pos_coords = [0, 0, 0, 0, 0, 0]
-            radius = SCALE * 15
-            for i in range(len(angle)):
-                murbot_pos_coords[2 * i] = int(radius * math.cos((angle[i] * math.pi / 6) + MF.HEADING))
-                murbot_pos_coords[2 * i + 1] = int(radius * math.sin((angle[i] * math.pi / 6) + MF.HEADING))
-            canvas.create_polygon(X_ZERO + murbot_pos_coords[0], Y_ZERO + murbot_pos_coords[1],
-                                  X_ZERO + murbot_pos_coords[2], Y_ZERO + murbot_pos_coords[3],
-                                  X_ZERO + murbot_pos_coords[4], Y_ZERO + murbot_pos_coords[5],
-                                  X_ZERO + murbot_pos_coords[0], Y_ZERO + murbot_pos_coords[1],
+        def draw_murbot(x_coord, y_coord):
+            angle = [0, 0.66, 1.33]
+            murbot_coords = [0, 0, 0, 0, 0, 0]
+            radius = SCALE * 30
+            radius2 = SCALE * 20.59
+            murbot_coords[0] = int(radius * math.cos((angle[0] * math.pi) + MF.HEADING))
+            murbot_coords[1] = int(radius * math.sin((angle[0] * math.pi) + MF.HEADING))
+            murbot_coords[2] = int(radius2 * math.cos((angle[1] * math.pi) + MF.HEADING))
+            murbot_coords[3] = int(radius2 * math.sin((angle[1] * math.pi) + MF.HEADING))
+            murbot_coords[4] = int(radius2 * math.cos((angle[2] * math.pi) + MF.HEADING))
+            murbot_coords[5] = int(radius2 * math.sin((angle[2] * math.pi) + MF.HEADING))
+            canvas.create_polygon(x_coord + murbot_coords[0], y_coord + murbot_coords[1],
+                                  x_coord + murbot_coords[2], y_coord + murbot_coords[3],
+                                  x_coord + murbot_coords[4], y_coord + murbot_coords[5],
                                   fill='light green',
                                   outline='green',
                                   tags='MURbot')
-            MURbot = canvas.coords('MURbot')
-            print(MURbot)
+            canvas.create_oval(x_coord + 5 * SCALE, y_coord + 5 * SCALE,
+                               x_coord - 5 * SCALE, y_coord - 5 * SCALE,
+                               outline='green',
+                               tags='MURbot')
 
         def env_dots(event):
             global OBS_WIN_W, OBS_WIN_H
@@ -136,8 +118,8 @@ class NavCanvas(TK.Canvas):
                 alpha = tup[0] * math.pi / 180
                 x = math.sin(alpha) * tup[1] * SCALE
                 y = math.cos(alpha) * tup[1] * SCALE
-                canvas.create_oval(X_ZERO + x + 2 * SCALE, Y_ZERO + y + 2 * SCALE,
-                                   X_ZERO + x - 2 * SCALE, Y_ZERO + y - 2 * SCALE,
+                canvas.create_oval(POS_X + x + 2 * SCALE, POS_Y + y + 2 * SCALE,
+                                   POS_X + x - 2 * SCALE, POS_Y + y - 2 * SCALE,
                                    fill='red',
                                    tag='Env_dots')
                 i += 5
@@ -154,9 +136,21 @@ class NavCanvas(TK.Canvas):
         def scroll_down(event):
             canvas.yview_scroll(1, TK.UNITS)
 
+        def reorganize_canvas(event):
+            canvas.xview_moveto(0)
+            canvas.yview_moveto(0)
+            canvas.xview_scroll(int(canvas.winfo_width() / -2), TK.UNITS)
+            canvas.yview_scroll(int(canvas.winfo_height() / -2), TK.UNITS)
 
-        canvas.bind('<Configure>', redraw)
-        canvas.bind('<FocusIn>', redraw)
+
+        canvas.xview_scroll(int(canvas.winfo_width() / -2), TK.UNITS)
+        canvas.yview_scroll(int(canvas.winfo_height() / -2), TK.UNITS)
+
+        scale.bind('<Motion>', redraw_canvas)
+        scale.pack(pady=20, side='top')
+
+        canvas.bind('<Configure>', reorganize_canvas)
+        canvas.bind('<FocusIn>', redraw_canvas)
         canvas.bind('<Up>', forward)
         canvas.bind('<Down>', backward)
         canvas.bind('<Left>', left)
@@ -168,8 +162,6 @@ class NavCanvas(TK.Canvas):
         canvas.bind('<KeyPress-s>', scroll_down)
         canvas.focus_force()
 
-        scale.bind('<Motion>', redraw)
-        scale.pack(pady=20, side='top')
 
 
 def CreateCanvasAndScale(parent_for_canvas, parent_for_scale):
@@ -179,10 +171,10 @@ def CreateCanvasAndScale(parent_for_canvas, parent_for_scale):
                          highlightthickness=0.5,
                          highlightcolor='#f6f6f6',
                          height=350,
-                         xscrollincrement=2,
-                         yscrollincrement=2)
-
+                         xscrollincrement=1,
+                         yscrollincrement=1)
     CANVAS_W.pack(expand=1, fill='both')
+
 
     global SCALE_W
     SCALE_W = TK.Scale(parent_for_scale,
