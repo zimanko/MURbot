@@ -4,8 +4,8 @@ import random
 import math
 
 '''Global variables'''
-POS_X = 0
-POS_Y = 0
+MURBOT_POSITION = [0, 0]            #The x, y coordinate of MURbot
+TOP_LEFT_CANVAS_COORD = [0, 0]      #The x, y coordinate of the top left corner of the canvas
 OBS_WIN_W = 0
 OBS_WIN_H = 0
 CANVAS_W = 0
@@ -55,18 +55,18 @@ class NavCanvas(TK.Canvas):
             a += 1
 
         def forward(event):
-            global POS_X, POS_Y
-            POS_X += 2 * math.cos(MF.HEADING)
-            POS_Y += 2 * math.sin(MF.HEADING)
-            print(POS_X, POS_Y)
+            global MURBOT_POSITION
+            MURBOT_POSITION[0] += 2 * math.cos(MF.HEADING)
+            MURBOT_POSITION[1] += 2 * math.sin(MF.HEADING)
+            print('MBpos: ' + str(MURBOT_POSITION))
             redraw_canvas(event)
             canvas.update()
 
         def backward(event):
-            global POS_X, POS_Y
-            POS_X -= 2 * math.cos(MF.HEADING)
-            POS_Y -= 2 * math.sin(MF.HEADING)
-            print(POS_X, POS_Y)
+            global MURBOT_POSITION
+            MURBOT_POSITION[0] -= 2 * math.cos(MF.HEADING)
+            MURBOT_POSITION[1] -= 2 * math.sin(MF.HEADING)
+            print('MBpos: ' + str(MURBOT_POSITION))
             redraw_canvas(event)
             canvas.update()
 
@@ -84,9 +84,10 @@ class NavCanvas(TK.Canvas):
 
         def redraw_canvas(event):
             canvas.delete('MURbot')
-            draw_murbot(POS_X, POS_Y)
+            draw_murbot(MURBOT_POSITION)
+            print('MBpos: ' + str(MURBOT_POSITION))
 
-        def draw_murbot(x_coord, y_coord):
+        def draw_murbot(coords):
             angle = [0, 0.66, 1.33]
             murbot_coords = [0, 0, 0, 0, 0, 0]
             radius = SCALE * 30
@@ -97,14 +98,14 @@ class NavCanvas(TK.Canvas):
             murbot_coords[3] = int(radius2 * math.sin((angle[1] * math.pi) + MF.HEADING))
             murbot_coords[4] = int(radius2 * math.cos((angle[2] * math.pi) + MF.HEADING))
             murbot_coords[5] = int(radius2 * math.sin((angle[2] * math.pi) + MF.HEADING))
-            canvas.create_polygon(x_coord + murbot_coords[0], y_coord + murbot_coords[1],
-                                  x_coord + murbot_coords[2], y_coord + murbot_coords[3],
-                                  x_coord + murbot_coords[4], y_coord + murbot_coords[5],
+            canvas.create_polygon(coords[0] + murbot_coords[0], coords[1] + murbot_coords[1],
+                                  coords[0] + murbot_coords[2], coords[1] + murbot_coords[3],
+                                  coords[0] + murbot_coords[4], coords[1] + murbot_coords[5],
                                   fill='light green',
                                   outline='green',
                                   tags='MURbot')
-            canvas.create_oval(x_coord + 5 * SCALE, y_coord + 5 * SCALE,
-                               x_coord - 5 * SCALE, y_coord - 5 * SCALE,
+            canvas.create_oval(coords[0] + 5 * SCALE, coords[1] + 5 * SCALE,
+                               coords[0] - 5 * SCALE, coords[1] - 5 * SCALE,
                                outline='green',
                                tags='MURbot')
 
@@ -118,33 +119,50 @@ class NavCanvas(TK.Canvas):
                 alpha = tup[0] * math.pi / 180
                 x = math.sin(alpha) * tup[1] * SCALE
                 y = math.cos(alpha) * tup[1] * SCALE
-                canvas.create_oval(POS_X + x + 2 * SCALE, POS_Y + y + 2 * SCALE,
-                                   POS_X + x - 2 * SCALE, POS_Y + y - 2 * SCALE,
+                canvas.create_oval(MURBOT_POSITION + x + 2 * SCALE, POS_Y + y + 2 * SCALE,
+                                   MURBOT_POSITION + x - 2 * SCALE, POS_Y + y - 2 * SCALE,
                                    fill='red',
                                    tag='Env_dots')
                 i += 5
 
         def scroll_right(event):
+            global TOP_LEFT_CANVAS_COORD
             canvas.xview_scroll(1, TK.UNITS)
+            TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] + 1
+            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         def scroll_left(event):
+            global TOP_LEFT_CANVAS_COORD
             canvas.xview_scroll(-1, TK.UNITS)
+            TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] - 1
+            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         def scroll_up(event):
+            global TOP_LEFT_CANVAS_COORD
             canvas.yview_scroll(-1, TK.UNITS)
+            TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] + 1
+            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         def scroll_down(event):
+            global TOP_LEFT_CANVAS_COORD
             canvas.yview_scroll(1, TK.UNITS)
+            TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] - 1
+            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         def reorganize_canvas(event):
+            global TOP_LEFT_CANVAS_COORD
             canvas.xview_moveto(0)
             canvas.yview_moveto(0)
-            canvas.xview_scroll(int(canvas.winfo_width() / -2), TK.UNITS)
-            canvas.yview_scroll(int(canvas.winfo_height() / -2), TK.UNITS)
-
+            TOP_LEFT_CANVAS_COORD = [0, 0]
+            canvas.xview_scroll(int(MURBOT_POSITION[0] + canvas.winfo_width() / 2), TK.UNITS)
+            canvas.yview_scroll(int(MURBOT_POSITION[1] - canvas.winfo_height() / 2), TK.UNITS)
+            draw_murbot(MURBOT_POSITION)
 
         canvas.xview_scroll(int(canvas.winfo_width() / -2), TK.UNITS)
         canvas.yview_scroll(int(canvas.winfo_height() / -2), TK.UNITS)
+        TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] - int(canvas.winfo_width() / 2)
+        TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] + int(canvas.winfo_height() / 2)
+        print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         scale.bind('<Motion>', redraw_canvas)
         scale.pack(pady=20, side='top')
