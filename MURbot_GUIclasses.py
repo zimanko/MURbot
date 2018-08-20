@@ -6,6 +6,7 @@ import math
 '''Global variables'''
 MURBOT_POSITION = [0, 0]            #The x, y coordinate of MURbot
 TOP_LEFT_CANVAS_COORD = [0, 0]      #The x, y coordinate of the top left corner of the canvas
+MB_VELOCITY = [0, 2]                #The velocity in y (heading) and x (perpendicular to heading) direction in m/s regarding regarding the IMU sensor
 OBS_WIN_W = 0
 OBS_WIN_H = 0
 CANVAS_W = 0
@@ -56,16 +57,16 @@ class NavCanvas(TK.Canvas):
 
         def forward(event):
             global MURBOT_POSITION
-            MURBOT_POSITION[0] += 2 * math.cos(MF.HEADING)
-            MURBOT_POSITION[1] += 2 * math.sin(MF.HEADING)
+            MURBOT_POSITION[0] += MB_VELOCITY[1] * math.cos(MF.HEADING)
+            MURBOT_POSITION[1] -= MB_VELOCITY[1] * math.sin(MF.HEADING)
             print('MBpos: ' + str(MURBOT_POSITION))
             redraw_canvas(event)
             canvas.update()
 
         def backward(event):
             global MURBOT_POSITION
-            MURBOT_POSITION[0] -= 2 * math.cos(MF.HEADING)
-            MURBOT_POSITION[1] -= 2 * math.sin(MF.HEADING)
+            MURBOT_POSITION[0] -= MB_VELOCITY[1] * math.cos(MF.HEADING)
+            MURBOT_POSITION[1] += MB_VELOCITY[1] * math.sin(MF.HEADING)
             print('MBpos: ' + str(MURBOT_POSITION))
             redraw_canvas(event)
             canvas.update()
@@ -83,29 +84,58 @@ class NavCanvas(TK.Canvas):
             canvas.update()
 
         def redraw_canvas(event):
+            global TOP_LEFT_CANVAS_COORD
             canvas.delete('MURbot')
+
+            i = 0.2     #percentege of canvas area what has to be always visable
+            border_left = TOP_LEFT_CANVAS_COORD[0] + canvas.winfo_width() * i
+            border_right = TOP_LEFT_CANVAS_COORD[0] + canvas.winfo_width() * (1 - i)
+            border_up = TOP_LEFT_CANVAS_COORD[1] - canvas.winfo_height() * i
+            border_down = TOP_LEFT_CANVAS_COORD[1] - canvas.winfo_height() * (1 - i)
+
+            if MURBOT_POSITION[0] < border_left - 2 or MURBOT_POSITION[0] > border_right + 2 or \
+                    MURBOT_POSITION[1] > border_up + 2 or  MURBOT_POSITION[1] < border_down - 2:
+                out_of_zone = True
+            else:
+                out_of_zone = False
+
+            if out_of_zone == False:
+                if MURBOT_POSITION[0] < border_left:
+                    canvas.xview_scroll(-MB_VELOCITY[1], TK.UNITS)
+                    TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] - MB_VELOCITY[1]
+                if MURBOT_POSITION[0] > border_right:
+                    canvas.xview_scroll(MB_VELOCITY[1], TK.UNITS)
+                    TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] + MB_VELOCITY[1]
+                if MURBOT_POSITION[1] > border_up:
+                    canvas.yview_scroll(-MB_VELOCITY[1], TK.UNITS)
+                    TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] + MB_VELOCITY[1]
+                if MURBOT_POSITION[1] < border_down:
+                    canvas.yview_scroll(MB_VELOCITY[1], TK.UNITS)
+                    TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] - MB_VELOCITY[1]
+
             draw_murbot(MURBOT_POSITION)
             print('MBpos: ' + str(MURBOT_POSITION))
+            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         def draw_murbot(coords):
             angle = [0, 0.66, 1.33]
             murbot_coords = [0, 0, 0, 0, 0, 0]
             radius = SCALE * 30
-            radius2 = SCALE * 20.59
+            radius2 = SCALE * 20.6
             murbot_coords[0] = int(radius * math.cos((angle[0] * math.pi) + MF.HEADING))
             murbot_coords[1] = int(radius * math.sin((angle[0] * math.pi) + MF.HEADING))
             murbot_coords[2] = int(radius2 * math.cos((angle[1] * math.pi) + MF.HEADING))
             murbot_coords[3] = int(radius2 * math.sin((angle[1] * math.pi) + MF.HEADING))
             murbot_coords[4] = int(radius2 * math.cos((angle[2] * math.pi) + MF.HEADING))
             murbot_coords[5] = int(radius2 * math.sin((angle[2] * math.pi) + MF.HEADING))
-            canvas.create_polygon(coords[0] + murbot_coords[0], coords[1] + murbot_coords[1],
-                                  coords[0] + murbot_coords[2], coords[1] + murbot_coords[3],
-                                  coords[0] + murbot_coords[4], coords[1] + murbot_coords[5],
+            canvas.create_polygon(coords[0] + murbot_coords[0], -coords[1] + murbot_coords[1],
+                                  coords[0] + murbot_coords[2], -coords[1] + murbot_coords[3],
+                                  coords[0] + murbot_coords[4], -coords[1] + murbot_coords[5],
                                   fill='light green',
                                   outline='green',
                                   tags='MURbot')
-            canvas.create_oval(coords[0] + 5 * SCALE, coords[1] + 5 * SCALE,
-                               coords[0] - 5 * SCALE, coords[1] - 5 * SCALE,
+            canvas.create_oval(coords[0] + 5 * SCALE, -coords[1] + 5 * SCALE,
+                               coords[0] - 5 * SCALE, -coords[1] - 5 * SCALE,
                                outline='green',
                                tags='MURbot')
 
@@ -154,9 +184,11 @@ class NavCanvas(TK.Canvas):
             canvas.xview_moveto(0)
             canvas.yview_moveto(0)
             TOP_LEFT_CANVAS_COORD = [0, 0]
-            canvas.xview_scroll(int(MURBOT_POSITION[0] + canvas.winfo_width() / 2), TK.UNITS)
-            canvas.yview_scroll(int(MURBOT_POSITION[1] - canvas.winfo_height() / 2), TK.UNITS)
-            draw_murbot(MURBOT_POSITION)
+            canvas.xview_scroll(int(canvas.winfo_width() / -2), TK.UNITS)
+            canvas.yview_scroll(int(canvas.winfo_height() / -2), TK.UNITS)
+            TOP_LEFT_CANVAS_COORD[0] = canvas.winfo_width() / -2
+            TOP_LEFT_CANVAS_COORD[1] = canvas.winfo_height() / 2
+            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         canvas.xview_scroll(int(canvas.winfo_width() / -2), TK.UNITS)
         canvas.yview_scroll(int(canvas.winfo_height() / -2), TK.UNITS)

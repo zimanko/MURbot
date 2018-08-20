@@ -10,7 +10,7 @@ import MURbot_GUIclasses as MG
 #BP = brickpi3.BrickPi3()
 #BN = BNO055.BNO055()
 POWER = 0
-HEADING = 0                 #in degrees
+HEADING = 0                #in degrees
 SPEED = [time.time(), 0]
 TILT = 30                   #tilting distance in cm
 CURRENT_OBS_DATA = []
