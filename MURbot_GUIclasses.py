@@ -2,16 +2,15 @@ import tkinter as TK
 import MURbot_Functions as MF
 import random
 import math
+import time
 
 '''Global variables'''
-MURBOT_POSITION = [0, 0]            #The x, y coordinate of MURbot
+MB_POS = [0, 0]                     #The x, y coordinate of MURbot
 TOP_LEFT_CANVAS_COORD = [0, 0]      #The x, y coordinate of the top left corner of the canvas
 MB_VELOCITY = [0, 2]                #The velocity in y (heading) and x (perpendicular to heading) direction in m/s regarding regarding the IMU sensor
-OBS_WIN_W = 0
-OBS_WIN_H = 0
-CANVAS_W = 0
-SCALE_W = 0
-SCALE = 1
+CANVAS_W = 0                        #Canvas handler
+SCALE_W = 0                         #Sclaing scrollbar handler
+SCALE = 1                           #Scale value
 
 '''GUI Classes and Functions'''
 class MainWndButtons(TK.Button):
@@ -47,27 +46,33 @@ class MainWndButtons(TK.Button):
 class NavCanvas(TK.Canvas):
     def __init__(self, canvas, scale):
 
-        test_radardata = []
-        a = 1
-        while a < 181:
-            n = (a, random.randrange(200, 255))
-            test_radardata.append(n)
-            del n
-            a += 1
+        def radar(event):
+            test_data = []
+            a = 1
+            while a < 181:
+                n = (a, random.randrange(180, 255))
+                test_data.append(n)
+                del n
+                a += 1
+
+            observation = [int(time.time()), (MB_POS[0], MB_POS[1]), test_data]
+            MF.RADARDATA.append(observation)
+            print(MF.RADARDATA)
+            redraw_canvas(event)
 
         def forward(event):
-            global MURBOT_POSITION
-            MURBOT_POSITION[0] += MB_VELOCITY[1] * math.cos(MF.HEADING)
-            MURBOT_POSITION[1] -= MB_VELOCITY[1] * math.sin(MF.HEADING)
-            print('MBpos: ' + str(MURBOT_POSITION))
+            global MB_POS
+            MB_POS[0] += MB_VELOCITY[1] * math.cos(MF.HEADING)
+            MB_POS[1] -= MB_VELOCITY[1] * math.sin(MF.HEADING)
+            print('MBpos: ' + str(MB_POS))
             redraw_canvas(event)
             canvas.update()
 
         def backward(event):
-            global MURBOT_POSITION
-            MURBOT_POSITION[0] -= MB_VELOCITY[1] * math.cos(MF.HEADING)
-            MURBOT_POSITION[1] += MB_VELOCITY[1] * math.sin(MF.HEADING)
-            print('MBpos: ' + str(MURBOT_POSITION))
+            global MB_POS
+            MB_POS[0] -= MB_VELOCITY[1] * math.cos(MF.HEADING)
+            MB_POS[1] += MB_VELOCITY[1] * math.sin(MF.HEADING)
+            print('MBpos: ' + str(MB_POS))
             redraw_canvas(event)
             canvas.update()
 
@@ -86,36 +91,40 @@ class NavCanvas(TK.Canvas):
         def redraw_canvas(event):
             global TOP_LEFT_CANVAS_COORD
             canvas.delete('MURbot')
+            canvas.delete('Env_dots')
 
-            i = 0.2     #percentege of canvas area what has to be always visable
-            border_left = TOP_LEFT_CANVAS_COORD[0] + canvas.winfo_width() * i
-            border_right = TOP_LEFT_CANVAS_COORD[0] + canvas.winfo_width() * (1 - i)
-            border_up = TOP_LEFT_CANVAS_COORD[1] - canvas.winfo_height() * i
-            border_down = TOP_LEFT_CANVAS_COORD[1] - canvas.winfo_height() * (1 - i)
+            #Establish an inner rectangle zone in the canvas. If the MB reaches the border the canvas scrolls automatically to keep it visiable
+            border_thickness = 0.2  #in percentage of the canvas width and height
+            border_left = TOP_LEFT_CANVAS_COORD[0] + canvas.winfo_width() * border_thickness
+            border_right = TOP_LEFT_CANVAS_COORD[0] + canvas.winfo_width() * (1 - border_thickness)
+            border_up = TOP_LEFT_CANVAS_COORD[1] - canvas.winfo_height() * border_thickness
+            border_down = TOP_LEFT_CANVAS_COORD[1] - canvas.winfo_height() * (1 - border_thickness)
 
-            if MURBOT_POSITION[0] < border_left - 2 or MURBOT_POSITION[0] > border_right + 2 or \
-                    MURBOT_POSITION[1] > border_up + 2 or  MURBOT_POSITION[1] < border_down - 2:
+            #Out_of_zone flag shows if the MB outside or not of the borders
+            if MB_POS[0] < border_left - 2 or MB_POS[0] > border_right + 2 or \
+                    MB_POS[1] > border_up + 2 or  MB_POS[1] < border_down - 2:
                 out_of_zone = True
             else:
                 out_of_zone = False
 
+            #The canvas scrolls automatically only if the MB inside the borders to keep it visible
             if out_of_zone == False:
-                if MURBOT_POSITION[0] < border_left:
+                if MB_POS[0] < border_left:
                     canvas.xview_scroll(-MB_VELOCITY[1], TK.UNITS)
                     TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] - MB_VELOCITY[1]
-                if MURBOT_POSITION[0] > border_right:
+                if MB_POS[0] > border_right:
                     canvas.xview_scroll(MB_VELOCITY[1], TK.UNITS)
                     TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] + MB_VELOCITY[1]
-                if MURBOT_POSITION[1] > border_up:
+                if MB_POS[1] > border_up:
                     canvas.yview_scroll(-MB_VELOCITY[1], TK.UNITS)
                     TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] + MB_VELOCITY[1]
-                if MURBOT_POSITION[1] < border_down:
+                if MB_POS[1] < border_down:
                     canvas.yview_scroll(MB_VELOCITY[1], TK.UNITS)
                     TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] - MB_VELOCITY[1]
 
-            draw_murbot(MURBOT_POSITION)
-            print('MBpos: ' + str(MURBOT_POSITION))
-            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
+            draw_murbot(MB_POS)
+            env_dots(MF.RADARDATA)
+
 
         def draw_murbot(coords):
             angle = [0, 0.66, 1.33]
@@ -139,45 +148,45 @@ class NavCanvas(TK.Canvas):
                                outline='green',
                                tags='MURbot')
 
-        def env_dots(event):
-            global OBS_WIN_W, OBS_WIN_H
-            OBS_WIN_W = canvas.winfo_width()
-            OBS_WIN_H = canvas.winfo_height()
+        def env_dots(radardata):
             i = 0
-            while i < len(test_radardata):
-                tup = test_radardata[i]
-                alpha = tup[0] * math.pi / 180
-                x = math.sin(alpha) * tup[1] * SCALE
-                y = math.cos(alpha) * tup[1] * SCALE
-                canvas.create_oval(MURBOT_POSITION + x + 2 * SCALE, POS_Y + y + 2 * SCALE,
-                                   MURBOT_POSITION + x - 2 * SCALE, POS_Y + y - 2 * SCALE,
-                                   fill='red',
-                                   tag='Env_dots')
-                i += 5
+            while i < len(radardata):
+                obs = radardata[i]
+                obs_pos = obs[1]
+                obs_data = obs[2]
+                n = 0
+                while n < len(obs_data):
+                    tup = obs_data[n]
+                    alpha = tup[0] * math.pi / 180
+                    x = math.sin(alpha) * tup[1] * SCALE
+                    y = math.cos(alpha) * tup[1] * SCALE
+                    canvas.create_oval(obs_pos[0] + x + 2 * SCALE, -obs_pos[1] + y + 2 * SCALE,
+                                       obs_pos[0] + x - 2 * SCALE, -obs_pos[1] + y - 2 * SCALE,
+                                       fill='red',
+                                       tag='Env_dots')
+                    n += 5
+                print(obs_pos)
+                i += 1
 
         def scroll_right(event):
             global TOP_LEFT_CANVAS_COORD
             canvas.xview_scroll(1, TK.UNITS)
             TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] + 1
-            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         def scroll_left(event):
             global TOP_LEFT_CANVAS_COORD
             canvas.xview_scroll(-1, TK.UNITS)
             TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] - 1
-            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         def scroll_up(event):
             global TOP_LEFT_CANVAS_COORD
             canvas.yview_scroll(-1, TK.UNITS)
             TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] + 1
-            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         def scroll_down(event):
             global TOP_LEFT_CANVAS_COORD
             canvas.yview_scroll(1, TK.UNITS)
             TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] - 1
-            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         def reorganize_canvas(event):
             global TOP_LEFT_CANVAS_COORD
@@ -188,13 +197,11 @@ class NavCanvas(TK.Canvas):
             canvas.yview_scroll(int(canvas.winfo_height() / -2), TK.UNITS)
             TOP_LEFT_CANVAS_COORD[0] = canvas.winfo_width() / -2
             TOP_LEFT_CANVAS_COORD[1] = canvas.winfo_height() / 2
-            print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         canvas.xview_scroll(int(canvas.winfo_width() / -2), TK.UNITS)
         canvas.yview_scroll(int(canvas.winfo_height() / -2), TK.UNITS)
         TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] - int(canvas.winfo_width() / 2)
         TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] + int(canvas.winfo_height() / 2)
-        print('TPLC: ' + str(TOP_LEFT_CANVAS_COORD))
 
         scale.bind('<Motion>', redraw_canvas)
         scale.pack(pady=20, side='top')
@@ -205,7 +212,7 @@ class NavCanvas(TK.Canvas):
         canvas.bind('<Down>', backward)
         canvas.bind('<Left>', left)
         canvas.bind('<Right>', right)
-        canvas.bind('<Control_L>', env_dots)
+        canvas.bind('<Control_L>', radar)
         canvas.bind('<KeyPress-d>', scroll_right)
         canvas.bind('<KeyPress-a>', scroll_left)
         canvas.bind('<KeyPress-w>', scroll_up)
@@ -229,8 +236,8 @@ def CreateCanvasAndScale(parent_for_canvas, parent_for_scale):
     global SCALE_W
     SCALE_W = TK.Scale(parent_for_scale,
                        bg='white',
-                       from_=0.5,
-                       to=1.5,
+                       from_=0.1,
+                       to=1.9,
                        resolution=-1,
                        showvalue=0,
                        orient='horizontal',
@@ -242,7 +249,7 @@ def CreateCanvasAndScale(parent_for_canvas, parent_for_scale):
 
 
 def SetScaleValue(scalevalue):
-    global SCALE
-    SCALE = float(scalevalue)
+     global SCALE
+     SCALE = float(scalevalue)
 
 
