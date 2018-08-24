@@ -7,10 +7,11 @@ import time
 '''Global variables'''
 MB_POS = [0, 0]                     #The x, y coordinate of MURbot
 TOP_LEFT_CANVAS_COORD = [0, 0]      #The x, y coordinate of the top left corner of the canvas
-MB_VELOCITY = [0, 2]                #The velocity in y (heading) and x (perpendicular to heading) direction in m/s regarding regarding the IMU sensor
 CANVAS_W = 0                        #Canvas handler
 SCALE_W = 0                         #Sclaing scrollbar handler
 SCALE = 1                           #Scale value
+MB_VELOCITY = [0, 2]        #The velocity in y (heading) and x (perpendicular to heading) direction in m/s regarding regarding the IMU sensor
+
 
 '''GUI Classes and Functions'''
 class MainWndButtons(TK.Button):
@@ -48,6 +49,7 @@ class NavCanvas(TK.Canvas):
 
         def radar(event):
             test_data = []
+            coords_for_canvas = []
             a = 1
             while a < 181:
                 n = (a, random.randrange(180, 255))
@@ -55,23 +57,37 @@ class NavCanvas(TK.Canvas):
                 del n
                 a += 1
 
-            observation = [int(time.time()), (MB_POS[0], MB_POS[1]), test_data]
+            i = 0
+            while i < len(test_data):
+                tup = test_data[i]
+                alpha = tup[0] * math.pi / 180
+                x = math.sin(alpha) * tup[1]
+                y = math.cos(alpha) * tup[1]
+                n = (x, y)
+                coords_for_canvas.append(n)
+                i += 1
+
+            observation = {'ID':     int(time.time()),
+                           'MBpos':  (MB_POS[0], MB_POS[1]),
+                           'RawRD':  test_data,
+                           'Coords': coords_for_canvas}
+
             MF.RADARDATA.append(observation)
-            print(MF.RADARDATA)
+            #print(MF.RADARDATA)
             redraw_canvas(event)
 
         def forward(event):
             global MB_POS
-            MB_POS[0] += MB_VELOCITY[1] * math.cos(MF.HEADING)
-            MB_POS[1] -= MB_VELOCITY[1] * math.sin(MF.HEADING)
+            MB_POS[0] += MB_VELOCITY[1] * SCALE * math.cos(MF.HEADING)
+            MB_POS[1] -= MB_VELOCITY[1] * SCALE * math.sin(MF.HEADING)
             print('MBpos: ' + str(MB_POS))
             redraw_canvas(event)
             canvas.update()
 
         def backward(event):
             global MB_POS
-            MB_POS[0] -= MB_VELOCITY[1] * math.cos(MF.HEADING)
-            MB_POS[1] += MB_VELOCITY[1] * math.sin(MF.HEADING)
+            MB_POS[0] -= MB_VELOCITY[1] * SCALE * math.cos(MF.HEADING)
+            MB_POS[1] += MB_VELOCITY[1] * SCALE * math.sin(MF.HEADING)
             print('MBpos: ' + str(MB_POS))
             redraw_canvas(event)
             canvas.update()
@@ -109,18 +125,22 @@ class NavCanvas(TK.Canvas):
 
             #The canvas scrolls automatically only if the MB inside the borders to keep it visible
             if out_of_zone == False:
+                v = int(MB_VELOCITY[1] * SCALE)
+                if v < 1:
+                    v = 1
+
                 if MB_POS[0] < border_left:
-                    canvas.xview_scroll(-MB_VELOCITY[1], TK.UNITS)
-                    TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] - MB_VELOCITY[1]
+                    canvas.xview_scroll(-v, TK.UNITS)
+                    TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] - v
                 if MB_POS[0] > border_right:
-                    canvas.xview_scroll(MB_VELOCITY[1], TK.UNITS)
-                    TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] + MB_VELOCITY[1]
+                    canvas.xview_scroll(v, TK.UNITS)
+                    TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] + v
                 if MB_POS[1] > border_up:
-                    canvas.yview_scroll(-MB_VELOCITY[1], TK.UNITS)
-                    TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] + MB_VELOCITY[1]
+                    canvas.yview_scroll(-v, TK.UNITS)
+                    TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] + v
                 if MB_POS[1] < border_down:
-                    canvas.yview_scroll(MB_VELOCITY[1], TK.UNITS)
-                    TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] - MB_VELOCITY[1]
+                    canvas.yview_scroll(v, TK.UNITS)
+                    TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] - v
 
             draw_murbot(MB_POS)
             env_dots(MF.RADARDATA)
@@ -149,24 +169,26 @@ class NavCanvas(TK.Canvas):
                                tags='MURbot')
 
         def env_dots(radardata):
-            i = 0
-            while i < len(radardata):
-                obs = radardata[i]
-                obs_pos = obs[1]
-                obs_data = obs[2]
-                n = 0
-                while n < len(obs_data):
-                    tup = obs_data[n]
-                    alpha = tup[0] * math.pi / 180
-                    x = math.sin(alpha) * tup[1] * SCALE
-                    y = math.cos(alpha) * tup[1] * SCALE
-                    canvas.create_oval(obs_pos[0] + x + 2 * SCALE, -obs_pos[1] + y + 2 * SCALE,
-                                       obs_pos[0] + x - 2 * SCALE, -obs_pos[1] + y - 2 * SCALE,
+            n = 0
+            while n < len(radardata):
+                obs = radardata[n]
+                obs_pos = obs['MBpos']
+                dot_coords = obs['Coords']
+                i = 0
+                while i < len(dot_coords):
+                    tup = dot_coords[i]
+                    x = (obs_pos[0] - MB_POS[0] + tup[0]) * SCALE
+                    y = -(obs_pos[1] - MB_POS[1] + tup[1]) * SCALE
+                    canvas.create_oval(MB_POS[0] + x + 2 * SCALE, -MB_POS[1] + y + 2 * SCALE,
+                                       MB_POS[0] + x - 2 * SCALE, -MB_POS[1] + y - 2 * SCALE,
                                        fill='red',
                                        tag='Env_dots')
-                    n += 5
-                print(obs_pos)
-                i += 1
+                    i += 5
+
+                #for keys, values in obs.items():
+                    #print(keys, values)
+
+                n += 1
 
         def scroll_right(event):
             global TOP_LEFT_CANVAS_COORD
