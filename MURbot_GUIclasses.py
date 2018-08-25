@@ -78,16 +78,16 @@ class NavCanvas(TK.Canvas):
 
         def forward(event):
             global MB_POS
-            MB_POS[0] += MB_VELOCITY[1] * SCALE * math.cos(MF.HEADING)
-            MB_POS[1] -= MB_VELOCITY[1] * SCALE * math.sin(MF.HEADING)
+            MB_POS[0] += MB_VELOCITY[1] * math.cos(MF.HEADING)
+            MB_POS[1] -= MB_VELOCITY[1] * math.sin(MF.HEADING)
             print('MBpos: ' + str(MB_POS))
             redraw_canvas(event)
             canvas.update()
 
         def backward(event):
             global MB_POS
-            MB_POS[0] -= MB_VELOCITY[1] * SCALE * math.cos(MF.HEADING)
-            MB_POS[1] += MB_VELOCITY[1] * SCALE * math.sin(MF.HEADING)
+            MB_POS[0] -= MB_VELOCITY[1] * math.cos(MF.HEADING)
+            MB_POS[1] += MB_VELOCITY[1] * math.sin(MF.HEADING)
             print('MBpos: ' + str(MB_POS))
             redraw_canvas(event)
             canvas.update()
@@ -113,12 +113,13 @@ class NavCanvas(TK.Canvas):
             border_thickness = 0.2  #in percentage of the canvas width and height
             border_left = TOP_LEFT_CANVAS_COORD[0] + canvas.winfo_width() * border_thickness
             border_right = TOP_LEFT_CANVAS_COORD[0] + canvas.winfo_width() * (1 - border_thickness)
-            border_up = TOP_LEFT_CANVAS_COORD[1] - canvas.winfo_height() * border_thickness
+            border_up = int(TOP_LEFT_CANVAS_COORD[1] - canvas.winfo_height() * border_thickness * SCALE)
             border_down = TOP_LEFT_CANVAS_COORD[1] - canvas.winfo_height() * (1 - border_thickness)
+            print(border_up)
 
             #Out_of_zone flag shows if the MB outside or not of the borders
-            if MB_POS[0] < border_left - 2 or MB_POS[0] > border_right + 2 or \
-                    MB_POS[1] > border_up + 2 or  MB_POS[1] < border_down - 2:
+            if MB_POS[0] < border_left - 5 or MB_POS[0] > border_right + 5 or \
+                    MB_POS[1] > border_up + 5 or  MB_POS[1] < border_down - 5:
                 out_of_zone = True
             else:
                 out_of_zone = False
@@ -128,7 +129,6 @@ class NavCanvas(TK.Canvas):
                 v = int(MB_VELOCITY[1] * SCALE)
                 if v < 1:
                     v = 1
-
                 if MB_POS[0] < border_left:
                     canvas.xview_scroll(-v, TK.UNITS)
                     TOP_LEFT_CANVAS_COORD[0] = TOP_LEFT_CANVAS_COORD[0] - v
@@ -142,7 +142,8 @@ class NavCanvas(TK.Canvas):
                     canvas.yview_scroll(v, TK.UNITS)
                     TOP_LEFT_CANVAS_COORD[1] = TOP_LEFT_CANVAS_COORD[1] - v
 
-            draw_murbot(MB_POS)
+            MB_canvas_coords = [MB_POS[0] * SCALE, MB_POS[1] * SCALE]
+            draw_murbot(MB_canvas_coords)
             env_dots(MF.RADARDATA)
 
 
@@ -177,10 +178,10 @@ class NavCanvas(TK.Canvas):
                 i = 0
                 while i < len(dot_coords):
                     tup = dot_coords[i]
-                    x = (obs_pos[0] - MB_POS[0] + tup[0]) * SCALE
-                    y = -(obs_pos[1] - MB_POS[1] + tup[1]) * SCALE
-                    canvas.create_oval(MB_POS[0] + x + 2 * SCALE, -MB_POS[1] + y + 2 * SCALE,
-                                       MB_POS[0] + x - 2 * SCALE, -MB_POS[1] + y - 2 * SCALE,
+                    x = (obs_pos[0] + tup[0]) * SCALE
+                    y = -(obs_pos[1] + tup[1]) * SCALE
+                    canvas.create_oval(x + 2 * SCALE, y + 2 * SCALE,
+                                       x - 2 * SCALE, y - 2 * SCALE,
                                        fill='red',
                                        tag='Env_dots')
                     i += 5
