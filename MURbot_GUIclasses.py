@@ -51,7 +51,7 @@ class NavCanvas(TK.Canvas):
 
         def radar(event):
             test_data = []
-            coords_for_canvas = []
+            dot_coords = []
             a = 1
             while a < 181:
                 n = (a, random.randrange(180, 255))
@@ -66,15 +66,13 @@ class NavCanvas(TK.Canvas):
                 x = math.sin(alpha) * tup[1]
                 y = math.cos(alpha) * tup[1]
                 n = (x, y)
-                coords_for_canvas.append(n)
+                dot_coords.append(n)
                 i += 1
 
-            observation = {'ID':     int(time.time()),
-                           'MBpos':  (MB_POS[0], MB_POS[1]),
-                           'MBCanvCrd': MB_CANV_CRD,
-                           'DottOffset': ENV_OFFSET,
-                           'RawRD':  test_data,
-                           'Coords': coords_for_canvas}
+            observation = {'ID':        int(time.time()),
+                           'MBpos':     (MB_POS[0], MB_POS[1]),
+                           'RawRD':     test_data,
+                           'Coords':    dot_coords}
 
             MF.RADARDATA.append(observation)
             #print(MF.RADARDATA)
@@ -120,13 +118,12 @@ class NavCanvas(TK.Canvas):
             canvas.delete('Env_dots')
             canvas.delete('rec')
 
-            #Establish an inner rectangle zone in the canvas. If the MB reaches the border the canvas scrolls automatically to keep it visiable
+            #Establish an inner rectangle zone in the canvas. If the MB reaches the border the enviroment moves
             border_thickness = 0.2  #in percentage of the canvas width and height
             border_left = canvas.winfo_width() * border_thickness
             border_right = canvas.winfo_width() * (1 - border_thickness)
             border_up = canvas.winfo_height() * border_thickness
             border_down = canvas.winfo_height() * (1 - border_thickness)
-            canvas.create_rectangle(border_left, border_down, border_right, border_up, fill=None, outline='red', tags='rec')
 
             #Out_of_zone flag shows if the MB outside or not of the borders
             if MB_CANV_CRD[0] < border_left - 5 or MB_CANV_CRD[0] > border_right + 5 or \
@@ -135,7 +132,7 @@ class NavCanvas(TK.Canvas):
             else:
                 out_of_zone = False
 
-            #The canvas scrolls automatically only if the MB inside the borders to keep it visible
+            #Change of the MB canvas coordinate and the emviroment dots coordinate on the border edge to simulate the movement
             if out_of_zone == False:
                 if MB_CANV_CRD[0] < border_left:
                     d = border_left - MB_CANV_CRD[0]
@@ -187,42 +184,44 @@ class NavCanvas(TK.Canvas):
             while n < len(radardata):
                 obs = radardata[n]
                 obs_pos = obs['MBpos']
-                dot_coords = obs['Coords']
+                obs_dot_coords = obs['Coords']
                 i = 0
-                while i < len(dot_coords):
-                    tup = dot_coords[i]
-                    x = (obs_pos[0] + tup[0]) * SCALE
-                    y = -(obs_pos[1] + tup[1]) * SCALE
-                    canvas.create_oval(x + 2 * SCALE, y + 2 * SCALE,
-                                       x - 2 * SCALE, y - 2 * SCALE,
+                while i < len(obs_dot_coords):
+                    tup = obs_dot_coords[i]
+                    x = obs_pos[0] - MB_POS[0] + tup[0]
+                    y = -(obs_pos[1] - MB_POS[1] + tup[1])
+                    canvas.create_oval(MB_CANV_CRD[0] + (ENV_OFFSET[0] + x + 2) * SCALE,
+                                       MB_CANV_CRD[1] + (ENV_OFFSET[1] + y + 2) * SCALE,
+                                       MB_CANV_CRD[0] + (ENV_OFFSET[0] + x - 2) * SCALE,
+                                       MB_CANV_CRD[1] + (ENV_OFFSET[1] + y - 2) * SCALE,
                                        fill='red',
                                        tag='Env_dots')
                     i += 5
-
-                #for keys, values in obs.items():
-                    #print(keys, values)
-
                 n += 1
 
         def scroll_right(event):
-            global DRAWING_CTRL
-            canvas.xview_scroll(1, TK.UNITS)
-            DRAWING_CTRL[0] = DRAWING_CTRL[0] + 1
+            global MB_CANV_CRD, ENV_OFFSET
+            MB_CANV_CRD[0] -= 1
+            ENV_OFFSET[0] -= 1
+            redraw_canvas(event)
 
         def scroll_left(event):
-            global DRAWING_CTRL
-            canvas.xview_scroll(-1, TK.UNITS)
-            DRAWING_CTRL[0] = DRAWING_CTRL[0] - 1
+            global MB_CANV_CRD, ENV_OFFSET
+            MB_CANV_CRD[0] += 1
+            ENV_OFFSET[0] += 1
+            redraw_canvas(event)
 
         def scroll_up(event):
-            global DRAWING_CTRL
-            canvas.yview_scroll(-1, TK.UNITS)
-            DRAWING_CTRL[1] = DRAWING_CTRL[1] + 1
+            global MB_CANV_CRD, ENV_OFFSET
+            MB_CANV_CRD[1] += 1
+            ENV_OFFSET[1] += 1
+            redraw_canvas(event)
 
         def scroll_down(event):
-            global DRAWING_CTRL
-            canvas.yview_scroll(1, TK.UNITS)
-            DRAWING_CTRL[1] = DRAWING_CTRL[1] - 1
+            global MB_CANV_CRD, ENV_OFFSET
+            MB_CANV_CRD[1] -= 1
+            ENV_OFFSET[1] -= 1
+            redraw_canvas(event)
 
         def reorganize_canvas(event):
             global MB_CANV_CRD
