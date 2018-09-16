@@ -9,20 +9,23 @@ import evdev as ED
 '''Global variables'''
 BP = brickpi3.BrickPi3()
 BN = BNO055.BNO055()
-LWP = 0
-RWP = 0
-HEADING = 3 * math.pi / 2                #in degrees
+LWP = 0						# Left wheel power; negative means forward
+RWP = 0						# Right wheel power; negative means forward
+HEADING = 3 * math.pi / 2   # in degrees
 SPEED = [time.time(), 0]
-TILT = 30                   #tilting distance in cm
+TILT = 30                   # tilting distance in cm
 CURRENT_OBS_DATA = []
-RADARDATA = []              #[[time, MB_pos, data], [time, MB_pos, data]]
+RADARDATA = []              # [[time, MB_pos, data], [time, MB_pos, data]]
 
 
 
 '''MURbot Robotic Functions'''
 def reset_all():
-    BP.set_motor_power(BP.PORT_B, 0)
-    BP.set_motor_power(BP.PORT_C, 0)
+    global LWP, RWP
+    LWP = 0
+    RWP = 0
+    BP.set_motor_power(BP.PORT_B, LWP)
+    BP.set_motor_power(BP.PORT_C, RWP)
     BP.set_motor_position(BP.PORT_D, 0)
     BP.set_motor_position(BP.PORT_A, 0)
     BP.reset_all()
@@ -78,9 +81,9 @@ def freeride():
 			modifier = 1 - abs(turn_value / 250)
 		BP.set_motor_position(BP.PORT_D, int(1.11 * turn_value))
 		
-		if BP.get_sensor(BP.PORT_3) > TILT:
+		if BP.get_sensor(BP.PORT_3) < TILT and power < 0:
 			power = 0
-		elif BP.get_sensor(BP.PORT_1) > TILT:
+		elif BP.get_sensor(BP.PORT_1) < TILT and power > 0:
 			power = 0
 		else:
 			rwp = power
@@ -97,39 +100,65 @@ def freeride():
 		speed_and_orientation()
 
 
-def move(lwp, rwp):
-    while BP.get_sensor(BP.PORT_3) > TILT:
-        BP.set_motor_power(BP.PORT_B, lwp)
-        BP.set_motor_power(BP.PORT_C, rwp)
-        #print('Power: ' + str(power))
-        speed_and_orientation()
-    BP.set_motor_power(BP.PORT_B, 0)
-    BP.set_motor_power(BP.PORT_C, 0)
+def move():
+	global LWP, RWP
+	if LWP < 0 and RWP < 0:
+		while BP.get_sensor(BP.PORT_3) > TILT:
+			BP.set_motor_power(BP.PORT_B, LWP)
+			BP.set_motor_power(BP.PORT_C, RWP)
+			#print('Power: ' + str(power))
+			speed_and_orientation()
+	elif LWP > 0 and RWP > 0:
+		while BP.get_sensor(BP.PORT_1) > TILT:
+			BP.set_motor_power(BP.PORT_B, LWP)
+			BP.set_motor_power(BP.PORT_C, RWP)
+			#print('Power: ' + str(power))
+			speed_and_orientation()
+    else:
+		print('Opposing power signs!')
+	LWP = 0
+	RWP = 0
+    BP.set_motor_power(BP.PORT_B, LWP)
+    BP.set_motor_power(BP.PORT_C, RWP)
     speed_and_orientation()
 
-'''
-def turn(degree):
-    heading_start = BN.read_euler()[0]
-    heading_end = heading_start + degree
-    BP.set_motor_position(BP.PORT_D, 285)
-    while abs(heading_end - BN.read_euler()[0]) < 0:
-		BP.set_motor_power(BP.PORT_B, 0)
-		BP.set_motor_power(BP.PORT_C, -power)
-		print('Orientation: ' + BN.read_euler()[0])
-		BP.set_motor_power(BP.PORT_B, 0)
-		BP.set_motor_power(BP.PORT_C, 0)
 
+def turn():
+	curr_heading_quarter = BN.read_euler()[0] // 90
+	goal_heading_quarter = HEADING // 90
+    
+    BP.set_motor_position(BP.PORT_D, 285)
+    while abs(HEADING - BN.read_euler()[0]) < 0:
+		if curr_heading_quarter == 3 and goal_heading_quarter == 0:
+			BP.set_motor_power(BP.PORT_B, LWP)
+			BP.set_motor_power(BP.PORT_C, -RWP)
+		elif curr_heading_quarter == 0 and goal_heading_quarter == 3:
+			BP.set_motor_power(BP.PORT_B, -LWP)
+			BP.set_motor_power(BP.PORT_C, RWP)
+		elif curr_heading_quarter > goal_heading_quarter:
+			BP.set_motor_power(BP.PORT_B, -LWP)
+			BP.set_motor_power(BP.PORT_C, RWP)
+		elif curr_heading_quarter > goal_heading_quarter:
+			BP.set_motor_power(BP.PORT_B, LWP)
+			BP.set_motor_power(BP.PORT_C, -RWP)
+		else:
+			print('pfff!')
+		print('Orientation: ' + BN.read_euler()[0])
+	
+	LWP = 0
+	RWP = 0
+	BP.set_motor_power(BP.PORT_B, LWP)
+	BP.set_motor_power(BP.PORT_C, RWP)
     BP.set_motor_position(BP.PORT_D, 0)
-    time.sleep(0.5)
-'''
+
 
 def speed_and_orientation():
     global SPEED
     initial_speed = SPEED[1]
     heading = BN.read_euler()
-    acc = BN.read_linear_acceleration()[1]    
+    acc = BN.read_linear_acceleration()[1]
     if LWP == 0 and RWP == 0:
-		acc = 0
+        acc = 0
     t1 = time.time()
     SPEED[1] = round(initial_speed + acc * (t1 - SPEED[0]), 2)
     SPEED[0] = t1
