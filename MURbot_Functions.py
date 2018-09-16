@@ -1,15 +1,16 @@
-#from di_sensors import BNO055
-#import brickpi3
+from di_sensors import BNO055
+import brickpi3
 import math
 import time
 import MURbot_GUIclasses as MG
-#import evdev as ED
+import evdev as ED
 
 
 '''Global variables'''
-#BP = brickpi3.BrickPi3()
-#BN = BNO055.BNO055()
-POWER = 0
+BP = brickpi3.BrickPi3()
+BN = BNO055.BNO055()
+LWP = 0
+RWP = 0
 HEADING = 3 * math.pi / 2                #in degrees
 SPEED = [time.time(), 0]
 TILT = 30                   #tilting distance in cm
@@ -20,10 +21,13 @@ RADARDATA = []              #[[time, MB_pos, data], [time, MB_pos, data]]
 
 '''MURbot Robotic Functions'''
 def reset_all():
-    move(0, 0)
+    BP.set_motor_power(BP.PORT_B, 0)
+    BP.set_motor_power(BP.PORT_C, 0)
     BP.set_motor_position(BP.PORT_D, 0)
     BP.set_motor_position(BP.PORT_A, 0)
     BP.reset_all()
+    time.sleep(1.5)
+    print('System stopped')
 
 
 def setup():
@@ -55,7 +59,7 @@ def setup():
             break
         rounds += 1
     print('Done (' + str(status) + ')')
-
+    
     time.sleep(3)
     print('Ready to go!')
 
@@ -63,7 +67,8 @@ def setup():
 def freeride():
 	device = ED.InputDevice('/dev/input/event0')
 	print('Input device: ' + str(device.name))
-	power, turn_value = 0, 0
+	power = 0 
+	turn_value = 0
 	
 	for event in device.read_loop():
 		if event.code == ED.ecodes.ABS_Y:
@@ -73,12 +78,13 @@ def freeride():
 			modifier = 1 - abs(turn_value / 250)
 		BP.set_motor_position(BP.PORT_D, int(1.11 * turn_value))
 		
-		if BP.get_sensor(BP.PORT_3) < TILT and power < 0:
+		if BP.get_sensor(BP.PORT_3) > TILT:
 			power = 0
-		elif BP.get_sensor(BP.PORT_1) < TILT and power > 0:
+		elif BP.get_sensor(BP.PORT_1) > TILT:
 			power = 0
 		else:
-			rwp, lwp = power, power
+			rwp = power
+			lwp = power
 		
 		if turn_value < 0:
 			lwp = int(modifier * power)
@@ -86,7 +92,9 @@ def freeride():
 			rwp = int(modifier * power)
 		
 		BP.set_motor_power(BP.PORT_B, lwp)
-		BP.set_motor_power(BP.PORT_C, rwp)		
+		BP.set_motor_power(BP.PORT_C, rwp)
+		
+		speed_and_orientation()
 
 
 def move(lwp, rwp):
@@ -94,10 +102,10 @@ def move(lwp, rwp):
         BP.set_motor_power(BP.PORT_B, lwp)
         BP.set_motor_power(BP.PORT_C, rwp)
         #print('Power: ' + str(power))
-        #speed_and_orientation()
+        speed_and_orientation()
     BP.set_motor_power(BP.PORT_B, 0)
     BP.set_motor_power(BP.PORT_C, 0)
-    time.sleep(0.5)
+    speed_and_orientation()
 
 '''
 def turn(degree):
@@ -119,14 +127,13 @@ def speed_and_orientation():
     global SPEED
     initial_speed = SPEED[1]
     heading = BN.read_euler()
-    a = BN.read_linear_acceleration() * 100
-    acc = a[1]
-    if acc < -10 or acc > 10:
-        acc = 0        
+    acc = BN.read_linear_acceleration()[1]    
+    if LWP == 0 and RWP == 0:
+		acc = 0
     t1 = time.time()
     SPEED[1] = round(initial_speed + acc * (t1 - SPEED[0]), 2)
     SPEED[0] = t1
-    print('Speed: ' + str(SPEED[1]) + ' m/s  |  Heading: ' + str(heading[0]) + '  |  Y-acc: ' + str(acc))
+    print(acc, SPEED[1])
 
 
 def radar(dps, ch):
@@ -201,7 +208,11 @@ def whatever():
 
 
 def run():
-	MG.NavCanvas(MG.CANVAS_W, MG.SCALE_W)
+	#MG.NavCanvas(MG.CANVAS_W, MG.SCALE_W)
+	#move(3-30, -30)
+	while True:
+		speed_and_orientation()
+
 
 
 
