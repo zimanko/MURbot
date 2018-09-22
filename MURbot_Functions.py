@@ -11,7 +11,7 @@ BP = brickpi3.BrickPi3()
 BN = BNO055.BNO055()
 LWP = 0						# Left wheel power; negative means forward
 RWP = 0						# Right wheel power; negative means forward
-HEADING = 3 * math.pi / 2   # in degrees
+HEADING = 0					# in degrees
 SPEED = [time.time(), 0]
 TILT = 30                   # tilting distance in cm
 CURRENT_OBS_DATA = []
@@ -40,6 +40,8 @@ def setup():
     BP.set_motor_position_kd(BP.PORT_A, 100)
     BP.set_motor_position_kp(BP.PORT_D, 120)
     BP.set_motor_position_kd(BP.PORT_D, 100)
+    BP.set_motor_position(BP.PORT_A, 0)
+    BP.set_motor_position(BP.PORT_D, 0)
     print('Done')
 
     # Setup Ultrasonic sensors
@@ -50,18 +52,19 @@ def setup():
 
     # Calibrate IMU Sensor
     print('Calibrate IMU Sensor...', end="")
-    rounds = 0
-    while rounds < 100:
+    while BN.get_calibration_status().count(3) != 4:
         BN.set_calibration(BN.get_calibration())
-        status = BN.get_calibration_status().count(3)
-        if status == 4:
-            break
-        if rounds > 10 and status == 3:
-            break
-        if rounds > 20 and status == 2:
-            break
-        rounds += 1
-    print('Done (' + str(status) + ')')
+    print('Done')
+    input('Put down the wehicle and press Enter')
+    
+    # Calibrate Heading to North
+    print('Calibrate Heading to North...', end="")
+    start_time = int(time.time())
+    while (int(time.time()) - start_time) < 3:
+        BN.read_euler()[0]
+    global HEADING
+    HEADING = BN.read_euler()[0]
+    print('Done (' + str(HEADING) + ')')
     
     time.sleep(3)
     print('Ready to go!')
@@ -102,6 +105,7 @@ def freeride():
 
 def move():
 	global LWP, RWP
+	
 	if LWP < 0 and RWP < 0:
 		while BP.get_sensor(BP.PORT_3) > TILT:
 			BP.set_motor_power(BP.PORT_B, LWP)
@@ -114,42 +118,65 @@ def move():
 			BP.set_motor_power(BP.PORT_C, RWP)
 			#print('Power: ' + str(power))
 			speed_and_orientation()
-    else:
+	else:
 		print('Opposing power signs!')
-	LWP = 0
-	RWP = 0
-    BP.set_motor_power(BP.PORT_B, LWP)
-    BP.set_motor_power(BP.PORT_C, RWP)
-    speed_and_orientation()
-
-
-def turn():
-	curr_heading_quarter = BN.read_euler()[0] // 90
-	goal_heading_quarter = HEADING // 90
-    
-    BP.set_motor_position(BP.PORT_D, 285)
-    while abs(HEADING - BN.read_euler()[0]) < 0:
-		if curr_heading_quarter == 3 and goal_heading_quarter == 0:
-			BP.set_motor_power(BP.PORT_B, LWP)
-			BP.set_motor_power(BP.PORT_C, -RWP)
-		elif curr_heading_quarter == 0 and goal_heading_quarter == 3:
-			BP.set_motor_power(BP.PORT_B, -LWP)
-			BP.set_motor_power(BP.PORT_C, RWP)
-		elif curr_heading_quarter > goal_heading_quarter:
-			BP.set_motor_power(BP.PORT_B, -LWP)
-			BP.set_motor_power(BP.PORT_C, RWP)
-		elif curr_heading_quarter > goal_heading_quarter:
-			BP.set_motor_power(BP.PORT_B, LWP)
-			BP.set_motor_power(BP.PORT_C, -RWP)
-		else:
-			print('pfff!')
-		print('Orientation: ' + BN.read_euler()[0])
-	
 	LWP = 0
 	RWP = 0
 	BP.set_motor_power(BP.PORT_B, LWP)
 	BP.set_motor_power(BP.PORT_C, RWP)
-    BP.set_motor_position(BP.PORT_D, 0)
+	speed_and_orientation()
+
+
+def turn(turn_to):
+	global LWP, RWP, HEADING
+	print('turn started')
+
+	def turn_clockwise():
+		while True:
+			curr_heading = BN.read_euler()[0]
+			if curr_heading > (turn_to + 0.5) or curr_heading < (turn_to - 0.5):
+				BP.set_motor_power(BP.PORT_B, -LWP)
+				BP.set_motor_power(BP.PORT_C, RWP)
+				print('clk Orientation: ' + str(BN.read_euler()[0]))
+			else:
+				break
+
+	def turn_counter_clockwise():
+		while True:
+			curr_heading = BN.read_euler()[0]
+			if curr_heading > (turn_to + 0.5) or curr_heading < (turn_to - 0.5):
+				BP.set_motor_power(BP.PORT_B, LWP)
+				BP.set_motor_power(BP.PORT_C, -RWP)
+				print('coclk Orientation: ' + str(BN.read_euler()[0]))
+			else:
+				break
+
+	LWP = 30
+	RWP = 30
+	turn_value = turn_to - BN.read_euler()[0]
+	print(turn_value)
+	
+	BP.set_motor_position(BP.PORT_D, 285)
+	
+	if turn_value > -180 and turn_value < 0:
+			turn_counter_clockwise()
+	elif turn_value > 180:
+			turn_counter_clockwise()
+	elif turn_value > 0 and turn_value < 180:
+			turn_clockwise()
+	elif turn_value < -180:
+			turn_clockwise()
+	else:
+		print('Something went wrong')
+	
+	print('turn ended')
+	
+	HEADING = BN.read_euler()[0]
+	LWP = 0
+	RWP = 0
+	BP.set_motor_power(BP.PORT_B, LWP)
+	BP.set_motor_power(BP.PORT_C, RWP)
+	BP.set_motor_position(BP.PORT_D, 0)
 
 
 def speed_and_orientation():
@@ -237,11 +264,8 @@ def whatever():
 
 
 def run():
+	global HEADING
 	#MG.NavCanvas(MG.CANVAS_W, MG.SCALE_W)
-	#move(3-30, -30)
-	while True:
-		speed_and_orientation()
-
-
-
+	#move(-30, -30)
+	turn(0)
 
