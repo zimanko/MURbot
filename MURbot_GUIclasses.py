@@ -13,6 +13,7 @@ CANVAS_W = 0                            # Canvas handler
 SCALE_W = 0                             # Sclaing scrollbar handler
 SCALE = 1                               # Scale value
 MB_VELOCITY = [0, 2]                    # The velocity in y (heading) and x (perpendicular to heading) in m/s regarding regarding the IMU sensor
+MB_DIR = None							# Direction flag for dot offseting
 
 
 '''GUI Classes and Functions'''
@@ -79,24 +80,26 @@ class NavCanvas(TK.Canvas):
             redraw_canvas(event)
 
         def forward(event):
-            global MB_POS, MB_CANV_CRD
+            global MB_POS, MB_CANV_CRD, MB_DIR
             xd = MB_VELOCITY[1] * math.cos(MF.HEADING)
             yd = MB_VELOCITY[1] * math.sin(MF.HEADING)
             MB_POS[0] += xd
             MB_POS[1] -= yd
             MB_CANV_CRD[0] += xd * SCALE
             MB_CANV_CRD[1] += yd * SCALE
+            MB_DIR = 'fwd'
             redraw_canvas(event)
             canvas.update()
 
         def backward(event):
-            global MB_POS, MB_CANV_CRD
+            global MB_POS, MB_CANV_CRD, MB_DIR
             xd = MB_VELOCITY[1] * math.cos(MF.HEADING)
             yd = MB_VELOCITY[1] * math.sin(MF.HEADING)
             MB_POS[0] -= xd
             MB_POS[1] += yd
             MB_CANV_CRD[0] -= xd * SCALE
             MB_CANV_CRD[1] -= yd * SCALE
+            MB_DIR = 'bwd'
             redraw_canvas(event)
             canvas.update()
 
@@ -138,19 +141,36 @@ class NavCanvas(TK.Canvas):
                     d = border_left - MB_CANV_CRD[0]
                     MB_CANV_CRD[0] += d
                     ENV_OFFSET[0] += d
+                    if MB_DIR == 'fwd':
+                        ENV_OFFSET[1] -= (MB_VELOCITY[1] * math.sin(MF.HEADING) * SCALE)
+                    else:
+                        ENV_OFFSET[1] += (MB_VELOCITY[1] * math.sin(MF.HEADING) * SCALE)
                 if MB_CANV_CRD[0] > border_right:
                     d = MB_CANV_CRD[0] - border_right
                     MB_CANV_CRD[0] -= d
                     ENV_OFFSET[0] -= d
+                    if MB_DIR == 'fwd':
+                        ENV_OFFSET[1] -= (MB_VELOCITY[1] * math.sin(MF.HEADING) * SCALE)
+                    if MB_DIR == 'bwd':
+                        ENV_OFFSET[1] += (MB_VELOCITY[1] * math.sin(MF.HEADING) * SCALE)
                 if MB_CANV_CRD[1] < border_up:
                     d = border_up - MB_CANV_CRD[1]
                     MB_CANV_CRD[1] += d
                     ENV_OFFSET[1] += d
+                    if MB_DIR == 'fwd':
+                        ENV_OFFSET[0] -= (MB_VELOCITY[1] * math.cos(MF.HEADING) * SCALE)
+                    if MB_DIR == 'bwd':
+                        ENV_OFFSET[0] += (MB_VELOCITY[1] * math.cos(MF.HEADING) * SCALE)
                 if MB_CANV_CRD[1] > border_down:
                     d = MB_CANV_CRD[1] - border_down
                     MB_CANV_CRD[1] -= d
                     ENV_OFFSET[1] -= d
+                    if MB_DIR == 'fwd':
+                        ENV_OFFSET[0] -= (MB_VELOCITY[1] * math.cos(MF.HEADING) * SCALE)
+                    if MB_DIR == 'bwd':
+                        ENV_OFFSET[0] += (MB_VELOCITY[1] * math.cos(MF.HEADING) * SCALE)
 
+                    
             POS_PER_CANVAS[0] = MB_CANV_CRD[0] / canvas.winfo_width()
             POS_PER_CANVAS[1] = MB_CANV_CRD[1] / canvas.winfo_height()
             draw_murbot(MB_CANV_CRD)
@@ -201,26 +221,22 @@ class NavCanvas(TK.Canvas):
 
         def scroll_right(event):
             global MB_CANV_CRD, ENV_OFFSET
-            MB_CANV_CRD[0] -= 1
-            ENV_OFFSET[0] -= 1
+            MB_CANV_CRD[0] -= 10
             redraw_canvas(event)
 
         def scroll_left(event):
             global MB_CANV_CRD, ENV_OFFSET
-            MB_CANV_CRD[0] += 1
-            ENV_OFFSET[0] += 1
+            MB_CANV_CRD[0] += 10
             redraw_canvas(event)
 
         def scroll_up(event):
             global MB_CANV_CRD, ENV_OFFSET
-            MB_CANV_CRD[1] += 1
-            ENV_OFFSET[1] += 1
+            MB_CANV_CRD[1] += 10
             redraw_canvas(event)
 
         def scroll_down(event):
             global MB_CANV_CRD, ENV_OFFSET
-            MB_CANV_CRD[1] -= 1
-            ENV_OFFSET[1] -= 1
+            MB_CANV_CRD[1] -= 10
             redraw_canvas(event)
 
         def reorganize_canvas(event):

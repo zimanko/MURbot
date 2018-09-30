@@ -265,7 +265,7 @@ def whatever():
 
 def run():
 	global HEADING
-	#MG.NavCanvas(MG.CANVAS_W, MG.SCALE_W)
+	MG.NavCanvas(MG.CANVAS_W, MG.SCALE_W)
 	#move(-30, -30)
-	turn(0)
+	#turn(0)
 
