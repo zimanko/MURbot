@@ -1,4 +1,4 @@
-from di_sensors import BNO055
+#from di_sensors import BNO055
 import brickpi3
 import math
 import time
@@ -8,7 +8,7 @@ import evdev as ED
 
 '''Global variables'''
 BP = brickpi3.BrickPi3()
-BN = BNO055.BNO055()
+#BN = BNO055.BNO055()
 LWP = 0						# Left wheel power; negative means forward
 RWP = 0						# Right wheel power; negative means forward
 HEADING = 0					# in degrees

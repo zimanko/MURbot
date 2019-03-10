@@ -8,11 +8,11 @@ import time
 MB_POS = [0, 0]                         # The x, y coordinate of MURbot
 MB_CANV_CRD = [0, 0]                    # X, y coordinates for drawing
 ENV_OFFSET = [0, 0]                     # Enviroment offset coordinates for drawing
-POS_PER_CANVAS = [0, 0]                 # MB_CANV_CRD / canvas dimensions -> positioning driver when the window size has changed
+POS_PER_CANVAS = [0, 0]                 # MB_CANV_CRD / canvas dimensions => positioning driver when the window size has changed
 CANVAS_W = 0                            # Canvas handler
 SCALE_W = 0                             # Sclaing scrollbar handler
 SCALE = 1                               # Scale value
-MB_VELOCITY = [0, 2]                    # The velocity in y (heading) and x (perpendicular to heading) in m/s regarding regarding the IMU sensor
+MB_VELOCITY = [0, 2]                    # The velocity in y (heading) and x (perpendicular to heading) in m/s regarding the IMU sensor
 MB_DIR = None							# Direction flag for dot offseting
 
 
